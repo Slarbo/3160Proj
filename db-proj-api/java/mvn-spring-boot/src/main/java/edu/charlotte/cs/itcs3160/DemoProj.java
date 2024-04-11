@@ -78,21 +78,21 @@ public class DemoProj {
      *
      * @return
      */
-    @GetMapping(value = "/auctions/", produces = "application/json")
+    @GetMapping(value = "/auction/", produces = "application/json")
     @ResponseBody
     public Map<String, Object> getAllAuctions() {
-        logger.info("###              DEMO: GET /auctions             ###");
+        logger.info("###              DEMO: GET /auction             ###");
         Connection conn = RestServiceApplication.getConnection();
         Map<String, Object> returnData = new HashMap<String, Object>();
         List<Map<String, Object>> results = new ArrayList<>();
 
         try (Statement stmt = conn.createStatement()) {
-            ResultSet rows = stmt.executeQuery("SELECT aid, isbn, start_date, end_date, current_bid, description FROM auctions");
+            ResultSet rows = stmt.executeQuery("SELECT aid, isbn, start_date, end_date, current_bid, description FROM auction");
             logger.debug("---- auctions  ----");
             while (rows.next()) {
                 Map<String, Object> content = new HashMap<>();
                 logger.debug("'aid': {}, 'isbn': {}, 'start_date': {}, 'end_date': {}, 'current_bid': {}, 'description': {}",
-                        rows.getString("aid"), rows.getString("isbn"), rows.getString("start_date"), rows.getString('end_date'), rows.getString('current_bid'), rows.getString('description')
+                        rows.getString("aid"), rows.getString("isbn"), rows.getString("start_date"), rows.getString("end_date"), rows.getString("current_bid"), rows.getString("description")
                 );
                 content.put("aid", rows.getString("aid"));
                 content.put("ISBN", rows.getString("isbn"));

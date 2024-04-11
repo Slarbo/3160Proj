@@ -1,0 +1,16 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\db-proj-api",
+    "\\db-proj-api\\java",
+    "\\db-proj-api\\java\\mvn-spring-boot",
+    "\\db-proj-api\\java\\mvn-spring-boot\\src",
+    "\\db-proj-api\\java\\mvn-spring-boot\\src\\main",
+    "\\db-proj-api\\java\\mvn-spring-boot\\src\\main\\resources",
+    "\\db-proj-api\\postman",
+    "\\db-proj-api\\python\\app",
+    "\\db-proj-api\\python\\app\\logs"
+  ],
+  "SelectedNode": "\\db-proj-api\\postman\\itcs3160_demo.postman_collection.json",
+  "PreviewInSolutionExplorer": false
+}
