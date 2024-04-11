@@ -78,25 +78,28 @@ public class DemoProj {
      *
      * @return
      */
-    @GetMapping(value = "/users/", produces = "application/json")
+    @GetMapping(value = "/auctions/", produces = "application/json")
     @ResponseBody
-    public Map<String, Object> getAllUsers() {
-        logger.info("###              DEMO: GET /users              ###");
+    public Map<String, Object> getAllAuctions() {
+        logger.info("###              DEMO: GET /auctions             ###");
         Connection conn = RestServiceApplication.getConnection();
         Map<String, Object> returnData = new HashMap<String, Object>();
         List<Map<String, Object>> results = new ArrayList<>();
 
         try (Statement stmt = conn.createStatement()) {
-            ResultSet rows = stmt.executeQuery("SELECT username, name, city FROM users");
-            logger.debug("---- users  ----");
+            ResultSet rows = stmt.executeQuery("SELECT aid, isbn, start_date, end_date, current_bid, description FROM auctions");
+            logger.debug("---- auctions  ----");
             while (rows.next()) {
                 Map<String, Object> content = new HashMap<>();
-                logger.debug("'username': {}, 'name': {}, 'city': {}",
-                        rows.getString("username"), rows.getString("name"), rows.getString("city")
+                logger.debug("'aid': {}, 'isbn': {}, 'start_date': {}, 'end_date': {}, 'current_bid': {}, 'description': {}",
+                        rows.getString("aid"), rows.getString("isbn"), rows.getString("start_date"), rows.getString('end_date'), rows.getString('current_bid'), rows.getString('description')
                 );
-                content.put("username", rows.getString("username"));
-                content.put("name", rows.getString("name"));
-                content.put("city", rows.getString("city"));
+                content.put("aid", rows.getString("aid"));
+                content.put("ISBN", rows.getString("isbn"));
+                content.put("start_date", rows.getString("start_date"));
+                content.put("end_date", rows.getString("end_date"));
+                content.put("current_bid", rows.getString("current_bid"));
+                content.put("description", rows.getString("description"));
                 results.add(content);
             }
 
