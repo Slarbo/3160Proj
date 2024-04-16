@@ -114,68 +114,6 @@ public class DemoProj {
                 + "<br/>";
     }
 
-    // Login user using simple tokens
-    // curl -X PUT http://localhost:8080/login -H "Content-Type: application/json" -d '{"username": "ssmith", "password": "ssmith_pass"}'
-
-    @PutMapping("/login")
-    public Map<String, Object> loginUser(@RequestBody Map<String, Object> payload) {
-        Map<String, Object> returnData = new HashMap<String, Object>();
-        
-        if (!payload.containsKey("username") || !payload.containsKey("password"))
-        {
-            logger.warn("missing credentials");
-            returnData.put("status", StatusCode.API_ERROR.code());
-            returnData.put("errors", "missing credentials");
-            return returnData;    
-        }
-        
-        String username = (String) payload.get("username");
-        String password = (String) payload.get("password");
-
-        Connection conn = RestServiceApplication.getConnection();
-
-        try (PreparedStatement stmt = conn.prepareStatement("select 1 from users where username = ? and password = ?")) {
-            stmt.setString(1, username);
-            stmt.setString(2, password);
-            ResultSet rows = stmt.executeQuery();
-
-            if (!rows.next()) {
-                logger.warn("invalid credentials");
-                returnData.put("status", StatusCode.API_ERROR.code());
-                returnData.put("errors", "invalid credentials");
-                return returnData;                 
-            }
-            else {
-                int rnd=(int) (Math.random()*999999999+111111111);
-                String token = username + rnd;
-
-                PreparedStatement stmt1 = conn.prepareStatement("insert into tokens values( ?, ? , current_timestamp + (60 * interval '1 min'))");
-                stmt1.setString(1, username);
-                stmt1.setString(2, token);
-                int affectedRows = stmt1.executeUpdate();
-
-                returnData.put("status", StatusCode.SUCCESS.code());
-                returnData.put("token", token);
-            }
-
-            conn.commit();
-        } 
-        catch (SQLException ex) {
-            logger.error("Error in DB", ex);
-            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
-            returnData.put("errors", ex.getMessage());;
-        }
-        finally {
-            try {
-                conn.close();
-            } catch (SQLException ex) {
-                logger.error("Error in DB", ex);
-            }
-        }
-
-        return returnData;
-    }
-
     // Login user using JWT tokens
     // curl -X PUT http://localhost:8080/loginJWT -H "Content-Type: application/json" -d '{"username": "ssmith", "password": "ssmith_pass"}'
 
@@ -230,19 +168,13 @@ public class DemoProj {
         return returnData;
     }
 
-    // List departments using simpe tokens
-    // To use JWT tokens just modify @token_required to @token_required_jwt
-    // curl -X GET http://localhost:8080/departments -H "Content-Type: application/json" -H "x-access-tokens: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzc21pdGgiLCJleHAiOjE3MTMxMTYyMjh9.FFHTvCmiXWmAh5tKKMeC1HH4DLPAB9d9IqqFYO2U3JOMCKjMO1qHNUIMYmmP0nfXXw56UbTOsfZOrVeOnCwquA"
-    // curl -X GET http://localhost:8080/departments -H "Content-Type: application/json" -H "x-access-tokens: ssmith339965530"
+    // List all auctions using JWT tokens
 
-    @GetMapping(value = "/departments", produces = "application/json")
+    @GetMapping(value = "/auctions", produces = "application/json")
     @ResponseBody
-    public Map<String, Object> getAllDepartments(@RequestHeader("x-access-tokens") String token) {
+    public Map<String, Object> getAllAuctions(@RequestHeader("x-access-tokens") String token) {
         // Token validation if using JWT
-        //if (!jwtUtil.validateTokenJWT(token))
-        //    return invalidToken();
-        // Simple token validation 
-        if (!validateToken(token))
+        if (!jwtUtil.validateTokenJWT(token))
             return invalidToken();
 
         logger.info("###              DEMO: GET /departments              ### ");
@@ -253,14 +185,19 @@ public class DemoProj {
         Connection conn = RestServiceApplication.getConnection();
 
         try (Statement stmt = conn.createStatement()) {
-            ResultSet rows = stmt.executeQuery("SELECT deptno, dname, loc FROM dept");
-            logger.debug("---- departments  ----");
+            ResultSet rows = stmt.executeQuery("SELECT aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id FROM auction");
+            logger.debug("---- auctions  ----");
             while (rows.next()) {
                 Map<String, Object> content = new HashMap<>();
 
-                content.put("deptno", rows.getString("deptno"));
-                content.put("dname", rows.getString("dname"));
-                content.put("loc", rows.getString("loc"));
+                content.put("aid", rows.getString("aid"));
+                content.put("isbn", rows.getString("isbn"));
+                content.put("start_date", rows.getString("start_date"));
+                content.put("end_date", rows.getString("end_date"));
+                content.put("current_bid", rows.getString("current_bid"));
+                content.put("description", rows.getString("description"));
+                content.put("item_isbn", rows.getString("item_isbn"));
+                content.put("seller_person_id", rows.getString("seller_person_id"));
                 results.add(content);
             }
 
