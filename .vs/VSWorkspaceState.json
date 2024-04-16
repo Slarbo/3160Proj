@@ -6,11 +6,12 @@
     "\\db-proj-api\\java\\mvn-spring-boot",
     "\\db-proj-api\\java\\mvn-spring-boot\\src",
     "\\db-proj-api\\java\\mvn-spring-boot\\src\\main",
-    "\\db-proj-api\\java\\mvn-spring-boot\\src\\main\\resources",
-    "\\db-proj-api\\postman",
-    "\\db-proj-api\\python\\app",
-    "\\db-proj-api\\python\\app\\logs"
+    "\\db-proj-api\\java\\mvn-spring-boot\\src\\main\\java",
+    "\\db-proj-api\\java\\mvn-spring-boot\\src\\main\\java\\edu",
+    "\\db-proj-api\\java\\mvn-spring-boot\\src\\main\\java\\edu\\charlotte",
+    "\\db-proj-api\\java\\mvn-spring-boot\\src\\main\\java\\edu\\charlotte\\cs",
+    "\\db-proj-api\\java\\mvn-spring-boot\\src\\main\\java\\edu\\charlotte\\cs\\itcs3160"
   ],
-  "SelectedNode": "\\db-proj-api\\postman\\itcs3160_demo.postman_collection.json",
+  "SelectedNode": "\\db-proj-api\\java\\mvn-spring-boot\\src\\main\\java\\edu\\charlotte\\cs\\itcs3160\\DemoProj.java",
   "PreviewInSolutionExplorer": false
 }
