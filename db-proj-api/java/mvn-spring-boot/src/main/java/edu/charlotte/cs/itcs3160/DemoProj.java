@@ -134,7 +134,7 @@ public class DemoProj {
 
         Connection conn = RestServiceApplication.getConnection();
 
-        try (PreparedStatement stmt = conn.prepareStatement("select 1 from users where username = ? and password = ?")) {
+        try (PreparedStatement stmt = conn.prepareStatement("select 1 from person where username = ? and password = ?")) {
             stmt.setString(1, username);
             stmt.setString(2, password);
             ResultSet rows = stmt.executeQuery();
@@ -177,7 +177,7 @@ public class DemoProj {
         if (!jwtUtil.validateTokenJWT(token))
             return invalidToken();
 
-        logger.info("###              DEMO: GET /departments              ### ");
+        logger.info("###              DEMO: GET /auctions              ### ");
         
         Map<String, Object> returnData = new HashMap<String, Object>();
         List<Map<String, Object>> results = new ArrayList<>();
@@ -220,32 +220,24 @@ public class DemoProj {
         return returnData;
     }
 
-    // Add empolyee
+    // Add user
     // curl -X POST http://localhost:8080/emp/ -H 'Content-Type: application/json' -H "x-access-tokens: ssmith339965530" -d '{"ename": "PETER", "job": "ANALYST", "sal": 100, "dname": "SALES"}'
 
-    @PostMapping(value = "/emp/", consumes = "application/json")
+    @PostMapping(value = "/user/", consumes = "application/json")
     @ResponseBody
-    public Map<String, Object> addEmployee(
-            @RequestHeader("x-access-tokens") String token,
+    public Map<String, Object> addUser(
             @RequestBody Map<String, Object> payload
     ) {
-        // Token validation if using JWT
-        //if (!jwtUtil.validateTokenJWT(token))
-        //    return invalidToken();
-        // Simple token validation 
-        if (!validateToken(token))
-            return invalidToken();
-
-        logger.info("###              DEMO: POST /Add Employee           ###");
+        logger.info("###              DEMO: POST /Add User           ###");
         Connection conn = RestServiceApplication.getConnection();
 
-        logger.debug("---- new employee  ----");
+        logger.debug("---- new user  ----");
         logger.debug("payload: {}", payload);
 
         Map<String, Object> returnData = new HashMap<String, Object>();
 
         // validate all the required inputs and types, e.g.,
-        if ((!payload.containsKey("ename")) || (!payload.containsKey("job")) || (!payload.containsKey("sal"))  || (!payload.containsKey("dname"))) {
+        if ((!payload.containsKey("name")) || (!payload.containsKey("address")) || (!payload.containsKey("phone")) || (!payload.containsKey("username")) || (!payload.containsKey("password"))) {
             logger.warn("missing inputs");
             returnData.put("status", StatusCode.API_ERROR.code());
             returnData.put("errors", "missing inputs");
