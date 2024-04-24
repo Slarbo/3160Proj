@@ -226,7 +226,6 @@ public class DemoProj {
     @PostMapping(value = "/emp/", consumes = "application/json")
     @ResponseBody
     public Map<String, Object> addEmployee(
-            @RequestHeader("x-access-tokens") String token,
             @RequestBody Map<String, Object> payload
     ) {
 
@@ -239,7 +238,7 @@ public class DemoProj {
         Map<String, Object> returnData = new HashMap<String, Object>();
 
         // validate all the required inputs and types, e.g.,
-        if ((!payload.containsKey("name")) || (!payload.containsKey("address")) || (!payload.containsKey("phone"))  || (!payload.containsKey("username")) || (!payload.contrainsKey("password"))) {
+        if ((!payload.containsKey("name")) || (!payload.containsKey("address")) || (!payload.containsKey("phone"))  || (!payload.containsKey("username")) || (!payload.containsKey("password"))) {
             logger.warn("missing inputs");
             returnData.put("status", StatusCode.API_ERROR.code());
             returnData.put("errors", "missing inputs");
