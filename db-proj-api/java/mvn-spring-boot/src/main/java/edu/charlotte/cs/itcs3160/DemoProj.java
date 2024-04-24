@@ -225,7 +225,7 @@ public class DemoProj {
 
     @PostMapping(value = "/user/", consumes = "application/json")
     @ResponseBody
-    public Map<String, Object> addEmployee(
+    public Map<String, Object> addUser(
             @RequestBody Map<String, Object> payload
     ) {
 
