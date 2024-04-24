@@ -134,7 +134,7 @@ public class DemoProj {
 
         Connection conn = RestServiceApplication.getConnection();
 
-        try (PreparedStatement stmt = conn.prepareStatement("select 1 from person where username = ? and password = ?")) {
+        try (PreparedStatement stmt = conn.prepareStatement("select 1 from users where username = ? and password = ?")) {
             stmt.setString(1, username);
             stmt.setString(2, password);
             ResultSet rows = stmt.executeQuery();
@@ -177,7 +177,7 @@ public class DemoProj {
         if (!jwtUtil.validateTokenJWT(token))
             return invalidToken();
 
-        logger.info("###              DEMO: GET /auctions              ### ");
+        logger.info("###              DEMO: GET /departments              ### ");
         
         Map<String, Object> returnData = new HashMap<String, Object>();
         List<Map<String, Object>> results = new ArrayList<>();
@@ -220,24 +220,32 @@ public class DemoProj {
         return returnData;
     }
 
-    // Add user
+    // Add empolyee
     // curl -X POST http://localhost:8080/emp/ -H 'Content-Type: application/json' -H "x-access-tokens: ssmith339965530" -d '{"ename": "PETER", "job": "ANALYST", "sal": 100, "dname": "SALES"}'
 
-    @PostMapping(value = "/user/", consumes = "application/json")
+    @PostMapping(value = "/emp/", consumes = "application/json")
     @ResponseBody
-    public Map<String, Object> addUser(
+    public Map<String, Object> addEmployee(
+            @RequestHeader("x-access-tokens") String token,
             @RequestBody Map<String, Object> payload
     ) {
-        logger.info("###              DEMO: POST /Add User           ###");
+        // Token validation if using JWT
+        if (!jwtUtil.validateTokenJWT(token))
+            return invalidToken();
+        // Simple token validation 
+        //if (!validateToken(token))
+        //    return invalidToken();
+
+        logger.info("###              DEMO: POST /Add Employee           ###");
         Connection conn = RestServiceApplication.getConnection();
 
-        logger.debug("---- new user  ----");
+        logger.debug("---- new employee  ----");
         logger.debug("payload: {}", payload);
 
         Map<String, Object> returnData = new HashMap<String, Object>();
 
         // validate all the required inputs and types, e.g.,
-        if ((!payload.containsKey("name")) || (!payload.containsKey("address")) || (!payload.containsKey("phone")) || (!payload.containsKey("username")) || (!payload.containsKey("password"))) {
+        if ((!payload.containsKey("name")) || (!payload.containsKey("address")) || (!payload.containsKey("phone"))  || (!payload.containsKey("username")) || (!payload.contrainsKey("password"))) {
             logger.warn("missing inputs");
             returnData.put("status", StatusCode.API_ERROR.code());
             returnData.put("errors", "missing inputs");
@@ -245,45 +253,34 @@ public class DemoProj {
         }
 
         try {
-            PreparedStatement ps = conn.prepareStatement("select deptno from dept where dname = ?");
-            ps.setString(1, (String) payload.get("dname"));
-            ResultSet rows = ps.executeQuery();
+            // get new empno - may generate duplicate keys, wich will lead to an exception
+            Statement stmt = conn.createStatement();
+            rows = stmt.executeQuery("select coalesce(max(ID),1) ID from Person"); //was "select coalesce(max(empno),1) empno from emp"
+            rows.next();
+            int userID = rows.getInt("ID")+1;
 
-            if (rows.next()) {
-                int deptno = rows.getInt("deptno");
+            ps  = conn.prepareStatement("INSERT INTO Person (ID, name, address, phone, username, password) VALUES (?, ?, ?, ?, ?, ?)");
+            ps.setInt(1, userID);
+            ps.setString(2, (String) payload.get("name"));
+            ps.setString(3, (String) payload.get("address"));
+            ps.setString(4, (String) payload.get("phone"));
+            ps.setString(5,(String) payload.get("username"));
+            ps.setString(6,(String) payload.get("password"));
+            int affectedRows = ps.executeUpdate();
 
-                // get new empno - may generate duplicate keys, wich will lead to an exception
-                Statement stmt = conn.createStatement();
-                rows = stmt.executeQuery("select coalesce(max(empno),1) empno from emp");
-                rows.next();
-                int empno = rows.getInt("empno")+1;
+            if (affectedRows==1) {
+                returnData.put("status", StatusCode.SUCCESS.code());
+                returnData.put("ID", userID);
 
-                ps  = conn.prepareStatement("INSERT INTO emp (empno,ename,job,sal,deptno) VALUES (?, ?, ?, ?, ?)");
-                ps.setInt(1, empno);
-                ps.setString(2, (String) payload.get("ename"));
-                ps.setString(3, (String) payload.get("job"));
-                ps.setInt(4, (int) payload.get("sal"));
-                ps.setInt(5, deptno);
-                int affectedRows = ps.executeUpdate();
-
-                if (affectedRows==1) {
-                    returnData.put("status", StatusCode.SUCCESS.code());
-                    returnData.put("empno", empno);
-
-                    conn.commit();
-                }
-                else {
-                    returnData.put("status", StatusCode.API_ERROR.code());
-                    returnData.put("errors", "Could not insert");
-
-                    conn.rollback();
-                }                
+                conn.commit();
             }
             else {
                 returnData.put("status", StatusCode.API_ERROR.code());
-                returnData.put("results", "department does not exist");
-                conn.rollback();    
-            }
+                returnData.put("errors", "Could not insert");
+
+                conn.rollback();
+            }                
+            
         } catch (SQLException ex) {
             logger.error("Error in DB", ex);
             try {
