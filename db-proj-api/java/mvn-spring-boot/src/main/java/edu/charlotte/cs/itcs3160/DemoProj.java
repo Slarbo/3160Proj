@@ -220,9 +220,6 @@ public class DemoProj {
         return returnData;
     }
 
-<<<<<<< Updated upstream
-    // Add a User
-=======
     // List auction by ID using JWT tokens
 
     @GetMapping(value = "/auctions/{aid}", produces = "application/json")
@@ -281,7 +278,6 @@ public class DemoProj {
     }
 
     // Add User
->>>>>>> Stashed changes
     // curl -X POST http://localhost:8080/user/ -H 'Content-Type: application/json' -H "x-access-tokens: ssmith339965530" -d '{"ename": "PETER", "job": "ANALYST", "sal": 100, "dname": "SALES"}'
 
     @PostMapping(value = "/user/", consumes = "application/json")
