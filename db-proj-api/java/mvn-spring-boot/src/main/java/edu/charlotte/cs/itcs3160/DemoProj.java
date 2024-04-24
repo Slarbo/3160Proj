@@ -134,7 +134,7 @@ public class DemoProj {
 
         Connection conn = RestServiceApplication.getConnection();
 
-        try (PreparedStatement stmt = conn.prepareStatement("select 1 from users where username = ? and password = ?")) {
+        try (PreparedStatement stmt = conn.prepareStatement("select 1 from person where username = ? and password = ?")) {
             stmt.setString(1, username);
             stmt.setString(2, password);
             ResultSet rows = stmt.executeQuery();
@@ -221,18 +221,18 @@ public class DemoProj {
     }
 
     // Add empolyee
-    // curl -X POST http://localhost:8080/emp/ -H 'Content-Type: application/json' -H "x-access-tokens: ssmith339965530" -d '{"ename": "PETER", "job": "ANALYST", "sal": 100, "dname": "SALES"}'
+    // curl -X POST http://localhost:8080/user/ -H 'Content-Type: application/json' -H "x-access-tokens: ssmith339965530" -d '{"ename": "PETER", "job": "ANALYST", "sal": 100, "dname": "SALES"}'
 
-    @PostMapping(value = "/emp/", consumes = "application/json")
+    @PostMapping(value = "/user/", consumes = "application/json")
     @ResponseBody
     public Map<String, Object> addEmployee(
             @RequestBody Map<String, Object> payload
     ) {
 
-        logger.info("###              DEMO: POST /Add Employee           ###");
+        logger.info("###              DEMO: POST /Add User           ###");
         Connection conn = RestServiceApplication.getConnection();
 
-        logger.debug("---- new employee  ----");
+        logger.debug("---- new user  ----");
         logger.debug("payload: {}", payload);
 
         Map<String, Object> returnData = new HashMap<String, Object>();
@@ -247,12 +247,12 @@ public class DemoProj {
 
         try {
             // get new empno - may generate duplicate keys, wich will lead to an exception
+            PreparedStatement ps  = conn.prepareStatement("INSERT INTO Person (ID, name, address, phone, username, password) VALUES (?, ?, ?, ?, ?, ?)");
             Statement stmt = conn.createStatement();
             ResultSet rows = ps.executeQuery();
             rows = stmt.executeQuery("select coalesce(max(ID),1) ID from Person"); //was "select coalesce(max(empno),1) empno from emp"
             rows.next();
             int userID = rows.getInt("ID")+1;
-            PreparedStatement ps  = conn.prepareStatement("INSERT INTO Person (ID, name, address, phone, username, password) VALUES (?, ?, ?, ?, ?, ?)");
             ps.setInt(1, userID);
             ps.setString(2, (String) payload.get("name"));
             ps.setString(3, (String) payload.get("address"));
