@@ -249,6 +249,7 @@ public class DemoProj {
         try {
             // get new empno - may generate duplicate keys, wich will lead to an exception
             Statement stmt = conn.createStatement();
+            ResultSet rows = ps.executeQuery();
             rows = stmt.executeQuery("select coalesce(max(ID),1) ID from Person"); //was "select coalesce(max(empno),1) empno from emp"
             rows.next();
             int userID = rows.getInt("ID")+1;
