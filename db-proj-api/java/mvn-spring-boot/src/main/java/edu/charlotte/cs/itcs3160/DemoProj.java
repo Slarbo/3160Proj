@@ -229,12 +229,6 @@ public class DemoProj {
             @RequestHeader("x-access-tokens") String token,
             @RequestBody Map<String, Object> payload
     ) {
-        // Token validation if using JWT
-        if (!jwtUtil.validateTokenJWT(token))
-            return invalidToken();
-        // Simple token validation 
-        //if (!validateToken(token))
-        //    return invalidToken();
 
         logger.info("###              DEMO: POST /Add Employee           ###");
         Connection conn = RestServiceApplication.getConnection();
@@ -258,8 +252,7 @@ public class DemoProj {
             rows = stmt.executeQuery("select coalesce(max(ID),1) ID from Person"); //was "select coalesce(max(empno),1) empno from emp"
             rows.next();
             int userID = rows.getInt("ID")+1;
-
-            ps  = conn.prepareStatement("INSERT INTO Person (ID, name, address, phone, username, password) VALUES (?, ?, ?, ?, ?, ?)");
+            PreparedStatement ps  = conn.prepareStatement("INSERT INTO Person (ID, name, address, phone, username, password) VALUES (?, ?, ?, ?, ?, ?)");
             ps.setInt(1, userID);
             ps.setString(2, (String) payload.get("name"));
             ps.setString(3, (String) payload.get("address"));
