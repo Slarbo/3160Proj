@@ -220,6 +220,63 @@ public class DemoProj {
         return returnData;
     }
 
+    // List auction by ID using JWT tokens
+
+    @GetMapping(value = "/auctions/{aid}", produces = "application/json")
+    @ResponseBody
+    public Map<String, Object> getAuctionById(
+        @RequestHeader("x-access-tokens") String token, 
+        @PathVariable("aid") Integer aid) {
+        // Token validation if using JWT
+        if (!jwtUtil.validateTokenJWT(token))
+            return invalidToken();
+
+        logger.info("###              DEMO: GET /auction              ### ");
+        
+        Map<String, Object> returnData = new HashMap<String, Object>();
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        Connection conn = RestServiceApplication.getConnection();
+
+        try {
+            Statement stmt = conn.createStatement();
+            PreparedStatement ps = conn.prepareStatement("SELECT aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id FROM auction WHERE aid = ?");
+            ps.setInt(1, aid);
+            ResultSet rows = ps.executeQuery();
+            logger.debug("---- auction  ----");
+            if (rows.next()) {
+                Map<String, Object> content = new HashMap<>();
+
+                content.put("aid", rows.getString("aid"));
+                content.put("isbn", rows.getString("isbn"));
+                content.put("start_date", rows.getString("start_date"));
+                content.put("end_date", rows.getString("end_date"));
+                content.put("current_bid", rows.getString("current_bid"));
+                content.put("description", rows.getString("description"));
+                content.put("item_isbn", rows.getString("item_isbn"));
+                content.put("seller_person_id", rows.getString("seller_person_id"));
+                results.add(content);
+            }
+
+            returnData.put("status", StatusCode.SUCCESS.code());
+            returnData.put("results", results);
+
+        } catch (SQLException ex) {
+            logger.error("Error in DB", ex);
+            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
+            returnData.put("errors", ex.getMessage());
+        }
+        finally {
+            try {
+                conn.close();
+            } catch (SQLException ex) {
+                logger.error("Error in DB", ex);
+            }
+        }
+
+        return returnData;
+    }
+
     // Add empolyee
     // curl -X POST http://localhost:8080/user/ -H 'Content-Type: application/json' -H "x-access-tokens: ssmith339965530" -d '{"ename": "PETER", "job": "ANALYST", "sal": 100, "dname": "SALES"}'
 
