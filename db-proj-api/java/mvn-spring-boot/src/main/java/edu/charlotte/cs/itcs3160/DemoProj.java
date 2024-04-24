@@ -246,34 +246,32 @@ public class DemoProj {
         }
 
         try {
-            // get new empno - may generate duplicate keys, wich will lead to an exception
-            PreparedStatement ps  = conn.prepareStatement("INSERT INTO Person (ID, name, address, phone, username, password) VALUES (?, ?, ?, ?, ?, ?)");
+            // get new empno - may generate duplicate keys, which will lead to an exception
             Statement stmt = conn.createStatement();
-            ResultSet rows = ps.executeQuery();
-            rows = stmt.executeQuery("select coalesce(max(ID),1) ID from Person"); //was "select coalesce(max(empno),1) empno from emp"
+            ResultSet rows = stmt.executeQuery("select coalesce(max(id),1) as id from Person"); //was "select coalesce(max(empno),1) empno from emp"
             rows.next();
-            int userID = rows.getInt("ID")+1;
+            int userID = rows.getInt("id") + 1;
+            //Sets up the insertion of a new User
+            PreparedStatement ps = conn.prepareStatement("INSERT INTO Person (id, name, address, phone, username, password) VALUES (?, ?, ?, ?, ?, ?)");
             ps.setInt(1, userID);
             ps.setString(2, (String) payload.get("name"));
             ps.setString(3, (String) payload.get("address"));
             ps.setString(4, (String) payload.get("phone"));
-            ps.setString(5,(String) payload.get("username"));
-            ps.setString(6,(String) payload.get("password"));
+            ps.setString(5, (String) payload.get("username"));
+            ps.setString(6, (String) payload.get("password"));
             int affectedRows = ps.executeUpdate();
-
-            if (affectedRows==1) {
+            //Checks to ensure it was successful
+            if (affectedRows == 1) {
                 returnData.put("status", StatusCode.SUCCESS.code());
-                returnData.put("ID", userID);
+                returnData.put("id", userID);
 
                 conn.commit();
-            }
-            else {
+            } else {
                 returnData.put("status", StatusCode.API_ERROR.code());
                 returnData.put("errors", "Could not insert");
 
                 conn.rollback();
-            }                
-            
+            }
         } catch (SQLException ex) {
             logger.error("Error in DB", ex);
             try {
