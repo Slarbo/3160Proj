@@ -277,7 +277,7 @@ public class DemoProj {
         return returnData;
     }
 
-    // Add empolyee
+    // Add User
     // curl -X POST http://localhost:8080/user/ -H 'Content-Type: application/json' -H "x-access-tokens: ssmith339965530" -d '{"ename": "PETER", "job": "ANALYST", "sal": 100, "dname": "SALES"}'
 
     @PostMapping(value = "/user/", consumes = "application/json")
@@ -347,6 +347,70 @@ public class DemoProj {
                 logger.error("Error in DB", ex);
             }
         }
+        return returnData;
+    }
+
+        // Edit auction by AID using JWT tokens
+
+    @PutMapping(value = "/auctions/{aid}", produces = "application/json")
+    @ResponseBody
+    public Map<String, Object> editAuctionById(
+        @RequestHeader("x-access-tokens") String token, 
+        @PathVariable("aid") Integer aid,
+        @RequestBody Map<String, Object> payload) {
+            
+        Map<String, Object> returnData = new HashMap<String, Object>();
+
+        //Token validation if using JWT
+        if (!jwtUtil.validateTokenJWT(token))
+            return invalidToken();
+        //validate that payload contains
+        if(!(payload.containsKey("description"))){
+            logger.warn("missing inputs");
+            returnData.put("status", StatusCode.API_ERROR.code());
+            returnData.put("errors", "missing inputs");
+            return returnData;
+        }
+        logger.info("###              DEMO: PUT /editAuction              ### ");
+            
+        List<Map<String, Object>> results = new ArrayList<>();
+    
+        Connection conn = RestServiceApplication.getConnection();
+    
+        try {
+            //chcks if AID is in auctions
+            Statement stmt = conn.createStatement();
+            PreparedStatement ps = conn.prepareStatement("SELECT aid FROM auction WHERE aid = ?");
+            ps.setInt(1, aid);
+            ResultSet rows = ps.executeQuery();
+            logger.debug("---- auction  ----");
+
+            if (rows.next()) {
+                ps = conn.prepareStatement("UPDATE auctions SET description = ? WHERE aid = ?");
+                ps.setString(1, (String) payload.get("description"));
+                ps.setInt(2, aid);
+            } else {
+                returnData.put("status", StatusCode.API_ERROR.code());
+                returnData.put("results", "auction does not exist");
+                conn.rollback();
+            }
+    
+            returnData.put("status", StatusCode.SUCCESS.code());
+            returnData.put("results", results);
+    
+        } catch (SQLException ex) {
+            logger.error("Error in DB", ex);
+            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
+            returnData.put("errors", ex.getMessage());
+        }
+        finally {
+            try {
+                conn.close();
+            } catch (SQLException ex) {
+                logger.error("Error in DB", ex);
+            }
+        }
+    
         return returnData;
     }
 }

@@ -69,4 +69,16 @@ public class JwtUtil {
             return false;
         }
     }
+
+    //return User
+    public String getTokenUsername(String token) {
+        
+        try {
+            Claims claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
+            return claims.getSubject();
+        } catch (Exception e) {
+            logger.error("ERROR:" + e);
+            return null;
+        }
+    }
 }

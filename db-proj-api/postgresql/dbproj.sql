@@ -65,3 +65,32 @@ ALTER TABLE item ADD CONSTRAINT item_fk1 FOREIGN KEY (category_category_id) REFE
 ALTER TABLE auction ADD CONSTRAINT auction_fk1 FOREIGN KEY (item_isbn) REFERENCES item(isbn);
 ALTER TABLE auction ADD CONSTRAINT auction_fk2 FOREIGN KEY (seller_person_id) REFERENCES seller(person_id);
 ALTER TABLE buyer ADD CONSTRAINT buyer_fk1 FOREIGN KEY (person_id) REFERENCES person(id);
+
+INSERT INTO person (name, address, phone, username, password) VALUES
+('John Doe', '123 Maple St', '555-1234', 'johndoe', 'pass1234'),
+('Jane Smith', '456 Oak St', '555-5678', 'janesmith', 'pass5678');
+
+INSERT INTO seller (business_name, rating, auctions_created, person_id) VALUES
+('Johns Great Goods', 4.5, 10, 1),
+('Janes Fine Finds', 4.7, 15, 2);
+
+INSERT INTO person (name, address, phone, username, password) VALUES
+('Alice Johnson', '789 Birch St', '555-6789', 'alicej', 'pass6789'),
+('Bob Ray', '321 Pine St', '555-4321', 'bobr', 'pass4321');
+
+INSERT INTO buyer (bids_placed, items_won, person_id) VALUES
+(3, 1, 3),
+(5, 2, 4);
+
+INSERT INTO category (category_id) VALUES
+(1),
+(2);
+
+INSERT INTO item (isbn, item_status, title, category_category_id) VALUES
+(1001, TRUE, 'Antique Vase', 1),
+(1002, TRUE, 'Vintage Watch', 2);
+
+INSERT INTO auction (aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id) VALUES
+(101, 1001, '2023-05-01', '2023-05-10', NULL, 'A beautiful antique vase from the 19th century.', 1001, 1),
+(102, 1002, '2023-05-02', '2023-05-11', NULL, 'A vintage watch from the 1950s in excellent condition.', 1002, 2);
+
