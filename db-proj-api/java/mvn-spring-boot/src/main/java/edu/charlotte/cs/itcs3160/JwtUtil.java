@@ -74,11 +74,11 @@ public class JwtUtil {
     public String getTokenUsername(String token) {
         
         try {
-            String user = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token.replace()).getBody().getSubject();
-            return user;
+            Claims claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
+            return claims.getSubject();
         } catch (Exception e) {
             logger.error("ERROR:" + e);
-            return false;
+            return null;
         }
     }
 }
