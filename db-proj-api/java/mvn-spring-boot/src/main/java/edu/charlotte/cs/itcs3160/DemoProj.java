@@ -356,12 +356,19 @@ public class DemoProj {
         @ResponseBody
         public Map<String, Object> editAuctionById(
             @RequestHeader("x-access-tokens") String token, 
-            @PathVariable("aid") Integer aid) {
-            // Token validation if using JWT
+            @PathVariable("aid") Integer aid,
+            @RequestBody Map<String, Object> payload) {
+                //Token validation if using JWT
 
             if (!jwtUtil.validateTokenJWT(token))
                 return invalidToken();
-            
+            //validate that payload contains
+            if(!(payload.containsKey("description"))){
+                logger.warn("missing inputs");
+            returnData.put("status", StatusCode.API_ERROR.code());
+            returnData.put("errors", "missing inputs");
+            return returnData;
+            }
             logger.info("###              DEMO: PUT /editAuction              ### ");
             
             Map<String, Object> returnData = new HashMap<String, Object>();
@@ -370,23 +377,21 @@ public class DemoProj {
             Connection conn = RestServiceApplication.getConnection();
     
             try {
+                //chcks if AID is in auctions
                 Statement stmt = conn.createStatement();
-                PreparedStatement ps = conn.prepareStatement("SELECT aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id FROM auction WHERE aid = ?");
+                PreparedStatement ps = conn.prepareStatement("SELECT aid FROM auction WHERE aid = ?");
                 ps.setInt(1, aid);
                 ResultSet rows = ps.executeQuery();
                 logger.debug("---- auction  ----");
+
                 if (rows.next()) {
-                    Map<String, Object> content = new HashMap<>();
-    
-                    content.put("aid", rows.getString("aid"));
-                    content.put("isbn", rows.getString("isbn"));
-                    content.put("start_date", rows.getString("start_date"));
-                    content.put("end_date", rows.getString("end_date"));
-                    content.put("current_bid", rows.getString("current_bid"));
-                    content.put("description", rows.getString("description"));
-                    content.put("item_isbn", rows.getString("item_isbn"));
-                    content.put("seller_person_id", rows.getString("seller_person_id"));
-                    results.add(content);
+                    ps = conn.prepareStatement("UPDATE auctions SET description = '?' WHERE aid = ?");
+                    ps.setInt(1, aid);
+                    ps.setString(2, (String) payload.get("description"));
+                } else {
+                    returnData.put("status", StatusCode.API_ERROR.code());
+                    returnData.put("results", "auction does not exist");
+                    conn.rollback();
                 }
     
                 returnData.put("status", StatusCode.SUCCESS.code());
