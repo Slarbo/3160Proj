@@ -389,14 +389,21 @@ public class DemoProj {
                 ps = conn.prepareStatement("UPDATE auctions SET description = ? WHERE aid = ?");
                 ps.setString(1, (String) payload.get("description"));
                 ps.setInt(2, aid);
+                int affectedRows = ps.executeUpdate();
+                if (affectedRows == 1) {
+                    returnData.put("Status",StatusCode.SUCCESS.code());
+                    returnData.put("Results", aid);
+                    conn.commit();
+                } else {
+                    returnData.put("status", StatusCode.API_ERROR.code());
+                    returnData.put("results", "error updating auction");
+                    conn.rollback();
+                }
             } else {
                 returnData.put("status", StatusCode.API_ERROR.code());
                 returnData.put("results", "auction does not exist");
                 conn.rollback();
             }
-    
-            returnData.put("status", StatusCode.SUCCESS.code());
-            returnData.put("results", results);
     
         } catch (SQLException ex) {
             logger.error("Error in DB", ex);
