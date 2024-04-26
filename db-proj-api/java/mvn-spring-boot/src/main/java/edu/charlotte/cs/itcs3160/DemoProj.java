@@ -222,7 +222,7 @@ public class DemoProj {
 
     // List auction by ID using JWT tokens
 
-    @GetMapping(value = "/auctions/{aid}", produces = "application/json")
+    @GetMapping(value = "/auction/{aid}", produces = "application/json")
     @ResponseBody
     public Map<String, Object> getAuctionById(
         @RequestHeader("x-access-tokens") String token, 
@@ -352,7 +352,7 @@ public class DemoProj {
 
         // Edit auction by AID using JWT tokens
 
-    @PutMapping(value = "/auctions/{aid}", produces = "application/json")
+    @PutMapping(value = "/auction/{aid}", produces = "application/json")
     @ResponseBody
     public Map<String, Object> editAuctionById(
         @RequestHeader("x-access-tokens") String token, 
@@ -418,6 +418,106 @@ public class DemoProj {
             }
         }
     
+        return returnData;
+    }
+
+    // Search existing auction by string
+    @GetMapping(value = "/auctions/{keyword:[A-Za-z]+}", produces = "application/json")
+    @ResponseBody
+    public Map<String, Object> searchAuctionByString(
+        @RequestHeader("x-access-tokens") String token, 
+        @PathVariable("keyword") String keyword) {
+        // Token validation if using JWT
+        if (!jwtUtil.validateTokenJWT(token))
+            return invalidToken();
+
+        logger.info("###              DEMO: GET /auction              ### ");
+        
+        Map<String, Object> returnData = new HashMap<String, Object>();
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        Connection conn = RestServiceApplication.getConnection();
+
+        try {
+            Statement stmt = conn.createStatement();
+            PreparedStatement ps = conn.prepareStatement("SELECT aid, description FROM auction WHERE description LIKE ?");
+            ps.setString(1, "%" + keyword + "%");
+            ResultSet rows = ps.executeQuery();
+            logger.debug("---- auction  ----");
+            if (rows.next()) {
+                Map<String, Object> content = new HashMap<>();
+
+                content.put("aid", rows.getString("aid"));
+                content.put("description", rows.getString("description"));
+                results.add(content);
+            }
+
+            returnData.put("status", StatusCode.SUCCESS.code());
+            returnData.put("results", results);
+
+        } catch (SQLException ex) {
+            logger.error("Error in DB", ex);
+            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
+            returnData.put("errors", ex.getMessage());
+        }
+        finally {
+            try {
+                conn.close();
+            } catch (SQLException ex) {
+                logger.error("Error in DB", ex);
+            }
+        }
+
+        return returnData;
+    }
+
+    // Search existing auction by string
+    @GetMapping(value = "/auctions/{keyword:[0-9]+}", produces = "application/json")
+    @ResponseBody
+    public Map<String, Object> searchAuctionByInteger(
+        @RequestHeader("x-access-tokens") String token, 
+        @PathVariable("keyword") Integer keyword) {
+        // Token validation if using JWT
+        if (!jwtUtil.validateTokenJWT(token))
+            return invalidToken();
+
+        logger.info("###              DEMO: GET /auction              ### ");
+        
+        Map<String, Object> returnData = new HashMap<String, Object>();
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        Connection conn = RestServiceApplication.getConnection();
+
+        try {
+            Statement stmt = conn.createStatement();
+            PreparedStatement ps = conn.prepareStatement("SELECT aid, description FROM auction WHERE item_isbn = ?");
+            ps.setInt(1, keyword);
+            ResultSet rows = ps.executeQuery();
+            logger.debug("---- auction  ----");
+            if (rows.next()) {
+                Map<String, Object> content = new HashMap<>();
+
+                content.put("aid", rows.getString("aid"));
+                content.put("description", rows.getString("description"));
+                results.add(content);
+            }
+
+            returnData.put("status", StatusCode.SUCCESS.code());
+            returnData.put("results", results);
+
+        } catch (SQLException ex) {
+            logger.error("Error in DB", ex);
+            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
+            returnData.put("errors", ex.getMessage());
+        }
+        finally {
+            try {
+                conn.close();
+            } catch (SQLException ex) {
+                logger.error("Error in DB", ex);
+            }
+        }
+
         return returnData;
     }
 }
