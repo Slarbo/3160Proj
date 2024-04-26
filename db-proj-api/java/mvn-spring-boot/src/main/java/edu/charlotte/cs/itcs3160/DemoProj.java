@@ -471,7 +471,7 @@ public class DemoProj {
         return returnData;
     }
 
-    // Search existing auction by string
+    // Search existing auction by integer
     @GetMapping(value = "/auctions/{keyword:[0-9]+}", produces = "application/json")
     @ResponseBody
     public Map<String, Object> searchAuctionByInteger(
