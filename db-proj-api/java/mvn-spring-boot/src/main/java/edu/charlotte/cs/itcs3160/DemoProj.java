@@ -225,14 +225,14 @@ public class DemoProj {
     @GetMapping(value = "/auctions/{aid}", produces = "application/json")
     @ResponseBody
     public Map<String, Object> getAuctionById(
-        @RequestHeader("x-access-tokens") String token, 
+        @RequestHeader("x-access-tokens") String token,
         @PathVariable("aid") Integer aid) {
         // Token validation if using JWT
         if (!jwtUtil.validateTokenJWT(token))
             return invalidToken();
 
         logger.info("###              DEMO: GET /auction              ### ");
-        
+
         Map<String, Object> returnData = new HashMap<String, Object>();
         List<Map<String, Object>> results = new ArrayList<>();
 
@@ -418,6 +418,109 @@ public class DemoProj {
             }
         }
     
+        return returnData;
+    }
+
+    /**
+     * Method for creating a bid
+     * @author Sergio
+     * @param token
+     * @param aid
+     * @return
+     */
+    @GetMapping(value = "/bid/{aid}/{bid}", produces = "application/json")
+    @ResponseBody
+    public Map<String, Object> placeBid(
+            @RequestHeader("x-access-tokens") String token,
+            @PathVariable("aid") Integer aid,
+            @PathVariable("bid") Double bid) {
+        // Token validation if using JWT
+        if (!jwtUtil.validateTokenJWT(token))
+            return invalidToken();
+
+        logger.info("###              DEMO: GET /placeBid              ### ");
+
+        Map<String, Object> returnData = new HashMap<String, Object>();
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        Connection conn = RestServiceApplication.getConnection();
+        //get username
+        String username = jwtUtil.getTokenUsername(token);
+        try {
+            //Gets User_ID as bidder_id
+            Statement stmt = conn.createStatement();
+            PreparedStatement ps = conn.prepareStatement("SELECT id from Person where username = ?");
+            ps.setString(1, username);
+            ResultSet rows = ps.executeQuery();
+            rows.next();
+            //does an SQL call to see if ID is already in buyer DB
+            int bidder_id = rows.getInt("id");
+            ps = conn.prepareStatement("SELECT Person_id from Buyer WHERE Person_id = ?");
+            ps.setInt(1, bidder_id);
+            rows = ps.executeQuery();
+            //check IF user is a new bidder
+
+            if (!(rows.next())) {
+                //Adds User to Buyer
+                ps = conn.prepareStatement("INSERT INTO Buyer (person_id, bids_placed, items_won) VALUES (?, 1, 0)");
+                ps.setInt(1, bidder_id);
+                ps.executeQuery();
+                conn.commit();
+            } else { //Updates the buyers info if they have an existing record.
+                ps = conn.prepareStatement("UPDATE Buyer set bids_placed = bids_placed + 1 WHERE person_id = ?");
+                ps.setInt(1, bidder_id);
+                ps.executeQuery();
+                conn.commit();
+            }
+            rows = stmt.executeQuery("select coalesce(max(bid_id), 1) as bid_id from bid");
+            rows.next();
+            //gets next bid id
+            int bid_ID = rows.getInt("bid_id") + 1;
+
+            //gets auction_isbn
+            ps = conn.prepareStatement("SELECT isbn from AUCTION where aid = ?");
+            ps.setInt(1, aid);
+            rows = ps.executeQuery();
+            rows.next();
+            int auction_isbn = rows.getInt("isbn");
+
+            logger.debug("---- adding bid  ----");
+            //adds bid into bid DB
+            Map<String, Object> content = new HashMap<>();
+            ps = conn.prepareStatement("INSERT INTO bid (bid_id, bid_amount, bid_time, auction_aid, auction_isbn, buyer_person_id) VALUE (?, ?, ?, ?, ?, ?)");
+            ps.setInt(1, bid_ID);
+            ps.setDouble(2, bid);
+            ps.setDate(3, java.sql.Date.valueOf(java.time.LocalDate.now()));
+            ps.setInt(4, aid);
+            ps.setInt(5, auction_isbn);
+            ps.setInt(6, bidder_id);
+            results.add(content);
+            int affectedRows = ps.executeUpdate();
+            //Checks to ensure it was successful
+            if (affectedRows == 1) {
+                returnData.put("status", StatusCode.SUCCESS.code());
+                returnData.put("bid id", bid_ID);
+
+                conn.commit();
+            } else {
+                returnData.put("status", StatusCode.API_ERROR.code());
+                returnData.put("errors", "Could not insert");
+
+                conn.rollback();
+            }
+        } catch (SQLException ex) {
+            logger.error("Error in DB", ex);
+            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
+            returnData.put("errors", ex.getMessage());
+        }
+        finally {
+            try {
+                conn.close();
+            } catch (SQLException ex) {
+                logger.error("Error in DB", ex);
+            }
+        }
+
         return returnData;
     }
 }
