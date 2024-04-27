@@ -433,7 +433,7 @@ public class DemoProj {
     public Map<String, Object> placeBid(
             @RequestHeader("x-access-tokens") String token,
             @PathVariable("aid") Integer aid,
-            @PathVariable("bid") Double bid) {
+            @PathVariable("bid") Float bid) {
         // Token validation if using JWT
         if (!jwtUtil.validateTokenJWT(token))
             return invalidToken();
@@ -447,15 +447,29 @@ public class DemoProj {
         //get username
         String username = jwtUtil.getTokenUsername(token);
         try {
-            //Gets User_ID as bidder_id
             Statement stmt = conn.createStatement();
-            PreparedStatement ps = conn.prepareStatement("SELECT id from Person where username = ?");
-            ps.setString(1, username);
+            //gets auction_isbn, current_bid
+            PreparedStatement ps = conn.prepareStatement("SELECT isbn, current_bid from AUCTION where aid = ?");
+            ps.setInt(1, aid);
             ResultSet rows = ps.executeQuery();
+            rows.next();
+            int auction_isbn = rows.getInt("isbn");
+            double auctionCurrentBid = rows.getDouble("current_bid");
+            //Checks if users placed bid is higher than stored bid.
+            if(auctionCurrentBid >= bid){
+                returnData.put("status", StatusCode.API_ERROR.code());
+                returnData.put("Error:", "Your bid is less than current bid");
+                return returnData;
+            }
+
+            //Gets User_ID as bidder_id
+            ps = conn.prepareStatement("SELECT id from Person where username = ?");
+            ps.setString(1, username);
+            rows = ps.executeQuery();
             rows.next();
             //does an SQL call to see if ID is already in buyer DB
             int bidder_id = rows.getInt("id");
-            ps = conn.prepareStatement("SELECT Person_id from Buyer WHERE Person_id = ?");
+            ps = conn.prepareStatement("SELECT person_id from Buyer WHERE person_id = ?");
             ps.setInt(1, bidder_id);
             rows = ps.executeQuery();
             //check IF user is a new bidder
@@ -477,19 +491,13 @@ public class DemoProj {
             //gets next bid id
             int bid_ID = rows.getInt("bid_id") + 1;
 
-            //gets auction_isbn
-            ps = conn.prepareStatement("SELECT isbn from AUCTION where aid = ?");
-            ps.setInt(1, aid);
-            rows = ps.executeQuery();
-            rows.next();
-            int auction_isbn = rows.getInt("isbn");
 
-            logger.debug("---- adding bid  ----");
+            logger.debug("---- adding bid to bid  ----");
             //adds bid into bid DB
             Map<String, Object> content = new HashMap<>();
             ps = conn.prepareStatement("INSERT INTO bid (bid_id, bid_amount, bid_time, auction_aid, auction_isbn, buyer_person_id) VALUE (?, ?, ?, ?, ?, ?)");
             ps.setInt(1, bid_ID);
-            ps.setDouble(2, bid);
+            ps.setFloat(2, bid);
             ps.setDate(3, java.sql.Date.valueOf(java.time.LocalDate.now()));
             ps.setInt(4, aid);
             ps.setInt(5, auction_isbn);
@@ -499,7 +507,7 @@ public class DemoProj {
             //Checks to ensure it was successful
             if (affectedRows == 1) {
                 returnData.put("status", StatusCode.SUCCESS.code());
-                returnData.put("bid id", bid_ID);
+                returnData.put("bid inserted", bid_ID);
 
                 conn.commit();
             } else {
@@ -508,6 +516,24 @@ public class DemoProj {
 
                 conn.rollback();
             }
+
+            //updates current bid in auction
+            ps = conn.prepareStatement("UPDATE auction set current bid = ? WHERE = ?");
+            ps.setFloat(1, bid);
+            ps.setInt(2, aid);
+            affectedRows = ps.executeUpdate();
+            if (affectedRows == 1) {
+                returnData.put("status", StatusCode.SUCCESS.code());
+                returnData.put("auction updated", aid);
+
+                conn.commit();
+            } else {
+                returnData.put("status", StatusCode.API_ERROR.code());
+                returnData.put("errors", "Could not insert");
+
+                conn.rollback();
+            }
+
         } catch (SQLException ex) {
             logger.error("Error in DB", ex);
             returnData.put("status", StatusCode.INTERNAL_ERROR.code());
