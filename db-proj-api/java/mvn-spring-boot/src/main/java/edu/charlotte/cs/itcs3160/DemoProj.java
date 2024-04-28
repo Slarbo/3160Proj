@@ -478,12 +478,12 @@ public class DemoProj {
                 //Adds User to Buyer
                 ps = conn.prepareStatement("INSERT INTO Buyer (person_id, bids_placed, items_won) VALUES (?, 1, 0)");
                 ps.setInt(1, bidder_id);
-                ps.executeQuery();
+                ps.executeUpdate();
                 conn.commit();
             } else { //Updates the buyers info if they have an existing record.
                 ps = conn.prepareStatement("UPDATE Buyer set bids_placed = bids_placed + 1 WHERE person_id = ?");
                 ps.setInt(1, bidder_id);
-                ps.executeQuery();
+                ps.executeUpdate();
                 conn.commit();
             }
             rows = stmt.executeQuery("select coalesce(max(bid_id), 1) as bid_id from bid");
@@ -547,6 +547,101 @@ public class DemoProj {
             }
         }
 
+        return returnData;
+    }
+
+    // Create Auction
+    // curl -X POST http://localhost:8080/user/ -H 'Content-Type: application/json' -H "x-access-tokens: ssmith339965530" -d '{"ename": "PETER", "job": "ANALYST", "sal": 100, "dname": "SALES"}'
+
+    @PostMapping(value = "/auction/", consumes = "application/json")
+    @ResponseBody
+    public Map<String, Object> createAuction(
+            @RequestBody Map<String, Object> payload,
+            @RequestHeader("x-access-tokens") String token
+    ) {
+        if (!jwtUtil.validateTokenJWT(token))
+            return invalidToken();
+        //gets username of signed in user
+        String username = jwtUtil.getTokenUsername(token);
+        logger.info("###              DEMO: POST /Add User           ###");
+        Connection conn = RestServiceApplication.getConnection();
+
+        logger.debug("---- new auction  ----");
+        logger.debug("payload: {}", payload);
+
+        Map<String, Object> returnData = new HashMap<String, Object>();
+
+        // validate all the required inputs and types, e.g.,
+        if ((!payload.containsKey("isbn")) || (!payload.containsKey("minimumPrice")) || (!payload.containsKey("description"))  || (!payload.containsKey("start_date")) || (!payload.containsKey("end_date"))) {
+            logger.warn("missing inputs");
+            returnData.put("status", StatusCode.API_ERROR.code());
+            returnData.put("errors", "missing inputs");
+            return returnData;
+        }
+
+        try {
+            //Search for user
+            Statement stmt = conn.createStatement();
+            PreparedStatement ps = conn.prepareStatement("select id from person where username = ?");
+            ps.setString(1, username);
+            ResultSet rows = ps.executeQuery();
+            rows.next();
+            int sellerId = rows.getInt("id");
+
+            // get new auction id - may generate duplicate keys, which will lead to an exception
+            rows = stmt.executeQuery("select coalesce(max(aid),1) as aid from auction"); //was "select coalesce(max(empno),1) empno from emp"
+            rows.next();
+            int aID = rows.getInt("aid") + 1;
+
+            //Searches to see if item is new or not
+            ps = conn.prepareStatement("select isbn from item where isbn = ?");
+            ps.setInt(1, (Integer) payload.get("isbn"));
+            rows = ps.executeQuery();
+            if (!(rows.next())){
+                ps = conn.prepareStatement("INSERT INTO auction (isbn, item_status, title, category_category_id)")
+            } else {
+
+            }
+
+            //Sets up the insertion of a new User
+            ps = conn.prepareStatement("INSERT INTO Person (id, name, address, phone, username, password) VALUES (?, ?, ?, ?, ?, ?)");
+            ps.setInt(1, userID);
+            ps.setString(2, (String) payload.get("name"));
+            ps.setString(3, (String) payload.get("address"));
+            ps.setString(4, (String) payload.get("phone"));
+            ps.setString(5, (String) payload.get("username"));
+            ps.setString(6, (String) payload.get("password"));
+            int affectedRows = ps.executeUpdate();
+            //Checks to ensure it was successful
+            if (affectedRows == 1) {
+                returnData.put("status", StatusCode.SUCCESS.code());
+                returnData.put("id", userID);
+
+                conn.commit();
+            } else {
+                returnData.put("status", StatusCode.API_ERROR.code());
+                returnData.put("errors", "Could not insert");
+
+                conn.rollback();
+            }
+        } catch (SQLException ex) {
+            logger.error("Error in DB", ex);
+            try {
+                conn.rollback();
+            } catch (SQLException ex1) {
+                logger.warn("Couldn't rollback", ex);
+            }
+
+            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
+            returnData.put("errors", ex.getMessage());
+
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException ex) {
+                logger.error("Error in DB", ex);
+            }
+        }
         return returnData;
     }
 }
