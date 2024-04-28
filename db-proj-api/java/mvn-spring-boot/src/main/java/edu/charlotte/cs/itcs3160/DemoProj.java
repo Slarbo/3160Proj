@@ -13,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -454,7 +455,7 @@ public class DemoProj {
             ResultSet rows = ps.executeQuery();
             rows.next();
             int auction_isbn = rows.getInt("isbn");
-            double auctionCurrentBid = rows.getDouble("current_bid");
+            double auctionCurrentBid = rows.getFloat("current_bid");
             //Checks if users placed bid is higher than stored bid.
             if(auctionCurrentBid >= bid){
                 returnData.put("status", StatusCode.API_ERROR.code());
@@ -495,7 +496,7 @@ public class DemoProj {
             logger.debug("---- adding bid to bid  ----");
             //adds bid into bid DB
             Map<String, Object> content = new HashMap<>();
-            ps = conn.prepareStatement("INSERT INTO bid (bid_id, bid_amount, bid_time, auction_aid, auction_isbn, buyer_person_id) VALUE (?, ?, ?, ?, ?, ?)");
+            ps = conn.prepareStatement("INSERT INTO bid (bid_id, bid_amount, bid_time, auction_aid, auction_isbn, buyer_person_id) VALUES (?, ?, ?, ?, ?, ?)");
             ps.setInt(1, bid_ID);
             ps.setFloat(2, bid);
             ps.setDate(3, java.sql.Date.valueOf(java.time.LocalDate.now()));
@@ -518,7 +519,7 @@ public class DemoProj {
             }
 
             //updates current bid in auction
-            ps = conn.prepareStatement("UPDATE auction set current bid = ? WHERE = ?");
+            ps = conn.prepareStatement("UPDATE auction set current_bid = ? WHERE aid = ?");
             ps.setFloat(1, bid);
             ps.setInt(2, aid);
             affectedRows = ps.executeUpdate();
@@ -563,7 +564,7 @@ public class DemoProj {
             return invalidToken();
         //gets username of signed in user
         String username = jwtUtil.getTokenUsername(token);
-        logger.info("###              DEMO: POST /Add User           ###");
+        logger.info("###              DEMO: POST /Add Auction           ###");
         Connection conn = RestServiceApplication.getConnection();
 
         logger.debug("---- new auction  ----");
@@ -572,7 +573,8 @@ public class DemoProj {
         Map<String, Object> returnData = new HashMap<String, Object>();
 
         // validate all the required inputs and types, e.g.,
-        if ((!payload.containsKey("isbn")) || (!payload.containsKey("minimumPrice")) || (!payload.containsKey("description"))  || (!payload.containsKey("start_date")) || (!payload.containsKey("end_date"))) {
+        if ((!payload.containsKey("isbn")) || (!payload.containsKey("minimumPrice")) || (!payload.containsKey("description"))  || (!payload.containsKey("start_date")) || (!payload.containsKey("end_date"))
+        || (!payload.containsKey("title"))) {
             logger.warn("missing inputs");
             returnData.put("status", StatusCode.API_ERROR.code());
             returnData.put("errors", "missing inputs");
@@ -597,25 +599,32 @@ public class DemoProj {
             ps = conn.prepareStatement("select isbn from item where isbn = ?");
             ps.setInt(1, (Integer) payload.get("isbn"));
             rows = ps.executeQuery();
-            if (!(rows.next())){
-                ps = conn.prepareStatement("INSERT INTO auction (isbn, item_status, title, category_category_id)")
-            } else {
 
+            if (!(rows.next())){
+                ps = conn.prepareStatement("INSERT INTO item (isbn, item_status, title, category_category_id)");
+                ps.setInt(1, (Integer) payload.get("isbn"));
+                ps.setBoolean(2, false);
+                ps.setString(3, (String) payload.get("title"));
+                ps.setInt(4, 1);
+                ps.executeUpdate();
+                conn.commit();
             }
 
             //Sets up the insertion of a new User
-            ps = conn.prepareStatement("INSERT INTO Person (id, name, address, phone, username, password) VALUES (?, ?, ?, ?, ?, ?)");
-            ps.setInt(1, userID);
-            ps.setString(2, (String) payload.get("name"));
-            ps.setString(3, (String) payload.get("address"));
-            ps.setString(4, (String) payload.get("phone"));
-            ps.setString(5, (String) payload.get("username"));
-            ps.setString(6, (String) payload.get("password"));
+            ps = conn.prepareStatement("INSERT INTO auction (aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            ps.setInt(1, aID);
+            ps.setInt(2, (Integer) payload.get("isbn"));
+            ps.setDate(3, java.sql.Date.valueOf((String) payload.get("start_date")));
+            ps.setDate(4, java.sql.Date.valueOf((String) payload.get("end_date")));
+            ps.setString(5, (String) payload.get("current_bid"));
+            ps.setString(6, (String) payload.get("description"));
+            ps.setInt(7, (Integer) payload.get("isbn"));
+            ps.setInt(8, sellerId);
             int affectedRows = ps.executeUpdate();
             //Checks to ensure it was successful
             if (affectedRows == 1) {
                 returnData.put("status", StatusCode.SUCCESS.code());
-                returnData.put("id", userID);
+                returnData.put("auction_id", aID);
 
                 conn.commit();
             } else {
