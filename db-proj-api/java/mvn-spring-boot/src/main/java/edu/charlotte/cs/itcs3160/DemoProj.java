@@ -604,7 +604,7 @@ public class DemoProj {
 
             if (!(rows.next())){
                 ps = conn.prepareStatement("INSERT INTO item (isbn, item_status, title, category_category_id) VALUES (?, ?, ?, ?)");
-                ps.setInt(1, (Integer) payload.get("isbn"));
+                ps.setInt(1, Integer.parseInt((String) payload.get("isbn")));
                 ps.setBoolean(2, false);
                 ps.setString(3, (String) payload.get("title"));
                 ps.setInt(4, 1);
@@ -615,12 +615,12 @@ public class DemoProj {
             //Sets up the insertion of a new auction
             ps = conn.prepareStatement("INSERT INTO auction (aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             ps.setInt(1, aID);
-            ps.setInt(2, (Integer) payload.get("isbn"));
+            ps.setInt(2, Integer.parseInt((String) payload.get("isbn")));
             ps.setDate(3, java.sql.Date.valueOf((String) payload.get("start_date")));
             ps.setDate(4, java.sql.Date.valueOf((String) payload.get("end_date")));
-            ps.setInt(5, (Integer) payload.get("current_bid"));
+            ps.setInt(5, Integer.parseInt((String) payload.get("current_bid")));
             ps.setString(6, (String) payload.get("description"));
-            ps.setInt(7, (Integer) payload.get("isbn"));
+            ps.setInt(7, Integer.parseInt((String) payload.get("isbn")));
             ps.setInt(8, sellerId);
             int affectedRows = ps.executeUpdate();
             //Checks to ensure it was successful
