@@ -599,7 +599,7 @@ public class DemoProj {
 
             //Searches to see if item is new or not
             ps = conn.prepareStatement("select isbn from item where isbn = ?");
-            ps.setInt(1, (Integer) payload.get("isbn"));
+            ps.setInt(1, Integer.parseInt((String) payload.get("isbn")));
             rows = ps.executeQuery();
 
             if (!(rows.next())){
