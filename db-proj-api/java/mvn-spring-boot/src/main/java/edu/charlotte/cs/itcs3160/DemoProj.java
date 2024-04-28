@@ -562,8 +562,10 @@ public class DemoProj {
     ) {
         if (!jwtUtil.validateTokenJWT(token))
             return invalidToken();
+
         //gets username of signed in user
         String username = jwtUtil.getTokenUsername(token);
+
         logger.info("###              DEMO: POST /Add Auction           ###");
         Connection conn = RestServiceApplication.getConnection();
 
@@ -601,7 +603,7 @@ public class DemoProj {
             rows = ps.executeQuery();
 
             if (!(rows.next())){
-                ps = conn.prepareStatement("INSERT INTO item (isbn, item_status, title, category_category_id)");
+                ps = conn.prepareStatement("INSERT INTO item (isbn, item_status, title, category_category_id) VALUES (?, ?, ?, ?)");
                 ps.setInt(1, (Integer) payload.get("isbn"));
                 ps.setBoolean(2, false);
                 ps.setString(3, (String) payload.get("title"));
@@ -610,7 +612,7 @@ public class DemoProj {
                 conn.commit();
             }
 
-            //Sets up the insertion of a new User
+            //Sets up the insertion of a new auction
             ps = conn.prepareStatement("INSERT INTO auction (aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             ps.setInt(1, aID);
             ps.setInt(2, (Integer) payload.get("isbn"));
