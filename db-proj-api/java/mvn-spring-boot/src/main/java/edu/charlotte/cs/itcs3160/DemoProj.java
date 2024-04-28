@@ -618,7 +618,7 @@ public class DemoProj {
             ps.setInt(2, (Integer) payload.get("isbn"));
             ps.setDate(3, java.sql.Date.valueOf((String) payload.get("start_date")));
             ps.setDate(4, java.sql.Date.valueOf((String) payload.get("end_date")));
-            ps.setString(5, (String) payload.get("current_bid"));
+            ps.setInt(5, (Integer) payload.get("current_bid"));
             ps.setString(6, (String) payload.get("description"));
             ps.setInt(7, (Integer) payload.get("isbn"));
             ps.setInt(8, sellerId);
