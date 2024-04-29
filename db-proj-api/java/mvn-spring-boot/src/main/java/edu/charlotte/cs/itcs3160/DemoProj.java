@@ -34,24 +34,24 @@ public class DemoProj {
 
     public enum StatusCode {
 
-        SUCCESS ("success", 200),
-        API_ERROR ("api_error", 400),
-        INTERNAL_ERROR ("internal_error", 500);
-    
-        private final String description; 
-        private final int code; 
-        
+        SUCCESS("success", 200),
+        API_ERROR("api_error", 400),
+        INTERNAL_ERROR("internal_error", 500);
+
+        private final String description;
+        private final int code;
+
         private StatusCode(String description, int code) {
             this.description = description;
             this.code = code;
         }
-        
-        public String description() { 
-            return description; 
+
+        public String description() {
+            return description;
         }
 
-        public int code() { 
-            return code; 
+        public int code() {
+            return code;
         }
     }
 
@@ -70,20 +70,18 @@ public class DemoProj {
             ResultSet rows = ps.executeQuery();
 
             if (!rows.next())
-                validated=false;                 
+                validated = false;
             else
-                validated=true;
-        } 
-        catch (SQLException ex) {
+                validated = true;
+        } catch (SQLException ex) {
             logger.error("Error in DB", ex);
-            validated=false;
-        }
-        finally {
+            validated = false;
+        } finally {
             try {
                 conn.close();
             } catch (SQLException ex) {
                 logger.error("Error in DB", ex);
-                validated=false;
+                validated = false;
             }
         }
 
@@ -121,15 +119,14 @@ public class DemoProj {
     @PutMapping("/loginJWT")
     public Map<String, Object> loginUserJWT(@RequestBody Map<String, Object> payload) {
         Map<String, Object> returnData = new HashMap<String, Object>();
-        
-        if (!payload.containsKey("username") || !payload.containsKey("password"))
-         {
+
+        if (!payload.containsKey("username") || !payload.containsKey("password")) {
             logger.warn("missing credentials");
             returnData.put("status", StatusCode.API_ERROR.code());
             returnData.put("errors", "missing credentials");
-            return returnData;    
+            return returnData;
         }
-        
+
         String username = (String) payload.get("username");
         String password = (String) payload.get("password");
 
@@ -144,21 +141,19 @@ public class DemoProj {
                 logger.warn("invalid credentials");
                 returnData.put("status", StatusCode.API_ERROR.code());
                 returnData.put("errors", "invalid credentials");
-                return returnData;                 
-            }
-            else {
+                return returnData;
+            } else {
                 String token = jwtUtil.generateTokenJWT(username);
                 returnData.put("status", StatusCode.SUCCESS.code());
                 returnData.put("token", token);
             }
 
-        } 
-        catch (SQLException ex) {
+        } catch (SQLException ex) {
             logger.error("Error in DB", ex);
             returnData.put("status", StatusCode.INTERNAL_ERROR.code());
-            returnData.put("errors", ex.getMessage());;
-        }
-        finally {
+            returnData.put("errors", ex.getMessage());
+            ;
+        } finally {
             try {
                 conn.close();
             } catch (SQLException ex) {
@@ -179,7 +174,7 @@ public class DemoProj {
             return invalidToken();
 
         logger.info("###              DEMO: GET /departments              ### ");
-        
+
         Map<String, Object> returnData = new HashMap<String, Object>();
         List<Map<String, Object>> results = new ArrayList<>();
 
@@ -209,8 +204,7 @@ public class DemoProj {
             logger.error("Error in DB", ex);
             returnData.put("status", StatusCode.INTERNAL_ERROR.code());
             returnData.put("errors", ex.getMessage());
-        }
-        finally {
+        } finally {
             try {
                 conn.close();
             } catch (SQLException ex) {
@@ -226,8 +220,8 @@ public class DemoProj {
     @GetMapping(value = "/auctions/{aid}", produces = "application/json")
     @ResponseBody
     public Map<String, Object> getAuctionById(
-        @RequestHeader("x-access-tokens") String token,
-        @PathVariable("aid") Integer aid) {
+            @RequestHeader("x-access-tokens") String token,
+            @PathVariable("aid") Integer aid) {
         // Token validation if using JWT
         if (!jwtUtil.validateTokenJWT(token))
             return invalidToken();
@@ -266,8 +260,7 @@ public class DemoProj {
             logger.error("Error in DB", ex);
             returnData.put("status", StatusCode.INTERNAL_ERROR.code());
             returnData.put("errors", ex.getMessage());
-        }
-        finally {
+        } finally {
             try {
                 conn.close();
             } catch (SQLException ex) {
@@ -296,7 +289,7 @@ public class DemoProj {
         Map<String, Object> returnData = new HashMap<String, Object>();
 
         // validate all the required inputs and types, e.g.,
-        if ((!payload.containsKey("name")) || (!payload.containsKey("address")) || (!payload.containsKey("phone"))  || (!payload.containsKey("username")) || (!payload.containsKey("password"))) {
+        if ((!payload.containsKey("name")) || (!payload.containsKey("address")) || (!payload.containsKey("phone")) || (!payload.containsKey("username")) || (!payload.containsKey("password"))) {
             logger.warn("missing inputs");
             returnData.put("status", StatusCode.API_ERROR.code());
             returnData.put("errors", "missing inputs");
@@ -351,33 +344,33 @@ public class DemoProj {
         return returnData;
     }
 
-        // Edit auction by AID using JWT tokens
+    // Edit auction by AID using JWT tokens
 
     @PutMapping(value = "/auctions/{aid}", produces = "application/json")
     @ResponseBody
     public Map<String, Object> editAuctionById(
-        @RequestHeader("x-access-tokens") String token, 
-        @PathVariable("aid") Integer aid,
-        @RequestBody Map<String, Object> payload) {
-            
+            @RequestHeader("x-access-tokens") String token,
+            @PathVariable("aid") Integer aid,
+            @RequestBody Map<String, Object> payload) {
+
         Map<String, Object> returnData = new HashMap<String, Object>();
 
         //Token validation if using JWT
         if (!jwtUtil.validateTokenJWT(token))
             return invalidToken();
         //validate that payload contains
-        if(!(payload.containsKey("description"))){
+        if (!(payload.containsKey("description"))) {
             logger.warn("missing inputs");
             returnData.put("status", StatusCode.API_ERROR.code());
             returnData.put("errors", "missing inputs");
             return returnData;
         }
         logger.info("###              DEMO: PUT /editAuction              ### ");
-            
+
         List<Map<String, Object>> results = new ArrayList<>();
-    
+
         Connection conn = RestServiceApplication.getConnection();
-    
+
         try {
             //chcks if AID is in auctions
             Statement stmt = conn.createStatement();
@@ -392,7 +385,7 @@ public class DemoProj {
                 ps.setInt(2, aid);
                 int affectedRows = ps.executeUpdate();
                 if (affectedRows == 1) {
-                    returnData.put("Status",StatusCode.SUCCESS.code());
+                    returnData.put("Status", StatusCode.SUCCESS.code());
                     returnData.put("Results", aid);
                     conn.commit();
                 } else {
@@ -405,29 +398,29 @@ public class DemoProj {
                 returnData.put("results", "auction does not exist");
                 conn.rollback();
             }
-    
+
         } catch (SQLException ex) {
             logger.error("Error in DB", ex);
             returnData.put("status", StatusCode.INTERNAL_ERROR.code());
             returnData.put("errors", ex.getMessage());
-        }
-        finally {
+        } finally {
             try {
                 conn.close();
             } catch (SQLException ex) {
                 logger.error("Error in DB", ex);
             }
         }
-    
+
         return returnData;
     }
 
     /**
      * Method for creating a bid
-     * @author Sergio
+     *
      * @param token
      * @param aid
      * @return
+     * @author Sergio
      */
     @GetMapping(value = "/bid/{aid}/{bid}", produces = "application/json")
     @ResponseBody
@@ -457,7 +450,7 @@ public class DemoProj {
             int auction_isbn = rows.getInt("isbn");
             double auctionCurrentBid = rows.getFloat("current_bid");
             //Checks if users placed bid is higher than stored bid.
-            if(auctionCurrentBid >= bid){
+            if (auctionCurrentBid >= bid) {
                 returnData.put("status", StatusCode.API_ERROR.code());
                 returnData.put("Error:", "Your bid is less than current bid");
                 return returnData;
@@ -540,8 +533,7 @@ public class DemoProj {
             logger.error("Error in DB", ex);
             returnData.put("status", StatusCode.INTERNAL_ERROR.code());
             returnData.put("errors", ex.getMessage());
-        }
-        finally {
+        } finally {
             try {
                 conn.close();
             } catch (SQLException ex) {
@@ -576,7 +568,7 @@ public class DemoProj {
         Map<String, Object> returnData = new HashMap<String, Object>();
 
         // validate all the required inputs and types, e.g.,
-        if ((!payload.containsKey("isbn")) || (!payload.containsKey("minimumPrice")) || (!payload.containsKey("description"))  || (!payload.containsKey("start_date")) || (!payload.containsKey("end_date"))
+        if ((!payload.containsKey("isbn")) || (!payload.containsKey("minimumPrice")) || (!payload.containsKey("description")) || (!payload.containsKey("start_date")) || (!payload.containsKey("end_date"))
                 || (!payload.containsKey("title"))) {
             logger.warn("missing inputs");
             returnData.put("status", StatusCode.API_ERROR.code());
@@ -594,7 +586,7 @@ public class DemoProj {
             int sellerId = rows.getInt("id");
             String businessName;
             //If user includes a business name it instead utilizes that
-            if (payload.containsKey("business_name")){
+            if (payload.containsKey("business_name")) {
                 businessName = (String) payload.get("business_Name");
             } else {
                 businessName = rows.getString("name");
@@ -630,7 +622,7 @@ public class DemoProj {
             ps.setInt(1, (Integer) payload.get("isbn"));
             rows = ps.executeQuery();
 
-            if (!(rows.next())){
+            if (!(rows.next())) {
                 ps = conn.prepareStatement("INSERT INTO item (isbn, item_status, title, category_category_id) VALUES (?, ?, ?, ?)");
                 ps.setInt(1, (Integer) payload.get("isbn"));
                 ps.setBoolean(2, false);
@@ -646,7 +638,7 @@ public class DemoProj {
             ps.setInt(2, (Integer) payload.get("isbn"));
             ps.setDate(3, java.sql.Date.valueOf((String) payload.get("start_date")));
             ps.setDate(4, java.sql.Date.valueOf((String) payload.get("end_date")));
-            ps.setInt(5, (Integer) payload.get("current_bid"));
+            ps.setInt(5, (Integer) payload.get("minimumPrice"));
             ps.setString(6, (String) payload.get("description"));
             ps.setInt(7, (Integer) payload.get("isbn"));
             ps.setInt(8, sellerId);
@@ -682,4 +674,5 @@ public class DemoProj {
             }
         }
         return returnData;
+    }
 }
