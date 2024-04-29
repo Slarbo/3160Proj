@@ -1,7 +1,18 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\db-proj-api",
+    "\\db-proj-api\\java",
+    "\\db-proj-api\\java\\mvn-spring-boot",
+    "\\db-proj-api\\java\\mvn-spring-boot\\src",
+    "\\db-proj-api\\java\\mvn-spring-boot\\src\\main",
+    "\\db-proj-api\\java\\mvn-spring-boot\\src\\main\\java",
+    "\\db-proj-api\\java\\mvn-spring-boot\\src\\main\\java\\edu",
+    "\\db-proj-api\\java\\mvn-spring-boot\\src\\main\\java\\edu\\charlotte",
+    "\\db-proj-api\\java\\mvn-spring-boot\\src\\main\\java\\edu\\charlotte\\cs",
+    "\\db-proj-api\\java\\mvn-spring-boot\\src\\main\\java\\edu\\charlotte\\cs\\itcs3160",
+    "\\db-proj-api\\postgresql"
   ],
-  "SelectedNode": "\\C:\\Users\\maxko\\OneDrive\\Documents\\School\\ITCS-3160\\3160Proj",
+  "SelectedNode": "\\db-proj-api\\java\\mvn-spring-boot\\src\\main\\java\\edu\\charlotte\\cs\\itcs3160\\DemoProj.java",
   "PreviewInSolutionExplorer": false
 }
