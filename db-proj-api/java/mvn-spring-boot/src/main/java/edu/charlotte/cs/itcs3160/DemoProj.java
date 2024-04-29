@@ -473,8 +473,8 @@ public class DemoProj {
             ps = conn.prepareStatement("SELECT person_id from Buyer WHERE person_id = ?");
             ps.setInt(1, bidder_id);
             rows = ps.executeQuery();
-            //check IF user is a new bidder
 
+            //check IF user is a new bidder
             if (!(rows.next())) {
                 //Adds User to Buyer
                 ps = conn.prepareStatement("INSERT INTO Buyer (person_id, bids_placed, items_won) VALUES (?, 1, 0)");
@@ -487,6 +487,7 @@ public class DemoProj {
                 ps.executeUpdate();
                 conn.commit();
             }
+
             rows = stmt.executeQuery("select coalesce(max(bid_id), 1) as bid_id from bid");
             rows.next();
             //gets next bid id
@@ -576,7 +577,7 @@ public class DemoProj {
 
         // validate all the required inputs and types, e.g.,
         if ((!payload.containsKey("isbn")) || (!payload.containsKey("minimumPrice")) || (!payload.containsKey("description"))  || (!payload.containsKey("start_date")) || (!payload.containsKey("end_date"))
-        || (!payload.containsKey("title"))) {
+                || (!payload.containsKey("title"))) {
             logger.warn("missing inputs");
             returnData.put("status", StatusCode.API_ERROR.code());
             returnData.put("errors", "missing inputs");
@@ -586,11 +587,38 @@ public class DemoProj {
         try {
             //Search for user
             Statement stmt = conn.createStatement();
-            PreparedStatement ps = conn.prepareStatement("select id from person where username = ?");
+            PreparedStatement ps = conn.prepareStatement("select name, id from person where username = ?");
             ps.setString(1, username);
             ResultSet rows = ps.executeQuery();
             rows.next();
             int sellerId = rows.getInt("id");
+            String businessName;
+            //If user includes a business name it instead utilizes that
+            if (payload.containsKey("business_name")){
+                businessName = (String) payload.get("business_Name");
+            } else {
+                businessName = rows.getString("name");
+            }
+
+
+            ps = conn.prepareStatement("SELECT person_id from Seller WHERE person_id = ?");
+            ps.setInt(1, sellerId);
+            rows = ps.executeQuery();
+
+
+            if (!(rows.next())) {
+                //Adds User to Buyer
+                ps = conn.prepareStatement("INSERT INTO Seller (business_name, rating, auctions_created, person_id) VALUES (?, 1, 0, ?)");
+                ps.setString(1, businessName);
+                ps.setInt(2, sellerId);
+                ps.executeUpdate();
+                conn.commit();
+            } else { //Updates the buyers info if they have an existing record.
+                ps = conn.prepareStatement("UPDATE Seller set auctions_created = auctions_created + 1 WHERE person_id = ?");
+                ps.setInt(1, sellerId);
+                ps.executeUpdate();
+                conn.commit();
+            }
 
             // get new auction id - may generate duplicate keys, which will lead to an exception
             rows = stmt.executeQuery("select coalesce(max(aid),1) as aid from auction"); //was "select coalesce(max(empno),1) empno from emp"
@@ -599,12 +627,12 @@ public class DemoProj {
 
             //Searches to see if item is new or not
             ps = conn.prepareStatement("select isbn from item where isbn = ?");
-            ps.setInt(1, Integer.parseInt((String) payload.get("isbn")));
+            ps.setInt(1, (Integer) payload.get("isbn"));
             rows = ps.executeQuery();
 
             if (!(rows.next())){
                 ps = conn.prepareStatement("INSERT INTO item (isbn, item_status, title, category_category_id) VALUES (?, ?, ?, ?)");
-                ps.setInt(1, Integer.parseInt((String) payload.get("isbn")));
+                ps.setInt(1, (Integer) payload.get("isbn"));
                 ps.setBoolean(2, false);
                 ps.setString(3, (String) payload.get("title"));
                 ps.setInt(4, 1);
@@ -615,12 +643,12 @@ public class DemoProj {
             //Sets up the insertion of a new auction
             ps = conn.prepareStatement("INSERT INTO auction (aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             ps.setInt(1, aID);
-            ps.setInt(2, Integer.parseInt((String) payload.get("isbn")));
+            ps.setInt(2, (Integer) payload.get("isbn"));
             ps.setDate(3, java.sql.Date.valueOf((String) payload.get("start_date")));
             ps.setDate(4, java.sql.Date.valueOf((String) payload.get("end_date")));
-            ps.setInt(5, Integer.parseInt((String) payload.get("current_bid")));
+            ps.setInt(5, (Integer) payload.get("current_bid"));
             ps.setString(6, (String) payload.get("description"));
-            ps.setInt(7, Integer.parseInt((String) payload.get("isbn")));
+            ps.setInt(7, (Integer) payload.get("isbn"));
             ps.setInt(8, sellerId);
             int affectedRows = ps.executeUpdate();
             //Checks to ensure it was successful
@@ -654,5 +682,4 @@ public class DemoProj {
             }
         }
         return returnData;
-    }
 }
