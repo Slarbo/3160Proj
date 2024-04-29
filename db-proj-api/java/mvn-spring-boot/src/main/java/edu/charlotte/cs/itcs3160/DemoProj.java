@@ -708,7 +708,7 @@ public class DemoProj {
         if (!jwtUtil.validateTokenJWT(token))
             return invalidToken();
         //validate that payload contains
-        if (!(payload.containsKey("description"))) {
+        if (!(payload.containsKey("description")) && !(payload.containsKey("title"))) {
             logger.warn("missing inputs");
             returnData.put("status", StatusCode.API_ERROR.code());
             returnData.put("errors", "missing inputs");
@@ -727,12 +727,26 @@ public class DemoProj {
             ps.setInt(1, aid);
             ResultSet rows = ps.executeQuery();
             logger.debug("---- auction  ----");
+            int affectedRows = 0;
 
             if (rows.next()) {
-                ps = conn.prepareStatement("UPDATE auctions SET description = ? WHERE aid = ?");
+                if (payload.containsKey("description")) {
+                    ps = conn.prepareStatement("UPDATE auction SET description = ? WHERE aid = ?");
                 ps.setString(1, (String) payload.get("description"));
                 ps.setInt(2, aid);
-                int affectedRows = ps.executeUpdate();
+                affectedRows = ps.executeUpdate();
+                } else if (payload.containsKey("title")) {
+                    ps = conn.prepareStatement("UPDATE auction SET title = ? WHERE aid = ?");
+                    ps.setString(1, (String) payload.get("title"));
+                    ps.setInt(2, aid);
+                    affectedRows = ps.executeUpdate();
+                } else if (payload.containsKey("title") && payload.containsKey("description")) {
+                    ps = conn.prepareStatement("UPDATE auction SET title = ?, description = ? WHERE aid = ?");
+                    ps.setString(1, (String) payload.get("title"));
+                    ps.setString(2, (String) payload.get("description"));
+                    ps.setInt(3, aid);
+                    affectedRows = ps.executeUpdate();
+                }
                 if (affectedRows == 1) {
                     returnData.put("Status", StatusCode.SUCCESS.code());
                     returnData.put("Results", aid);
