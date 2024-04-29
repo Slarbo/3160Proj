@@ -113,167 +113,7 @@ public class DemoProj {
                 + "<br/>";
     }
 
-    // Login user using JWT tokens
-    // curl -X PUT http://localhost:8080/loginJWT -H "Content-Type: application/json" -d '{"username": "ssmith", "password": "ssmith_pass"}'
-
-    @PutMapping("/loginJWT")
-    public Map<String, Object> loginUserJWT(@RequestBody Map<String, Object> payload) {
-        Map<String, Object> returnData = new HashMap<String, Object>();
-
-        if (!payload.containsKey("username") || !payload.containsKey("password")) {
-            logger.warn("missing credentials");
-            returnData.put("status", StatusCode.API_ERROR.code());
-            returnData.put("errors", "missing credentials");
-            return returnData;
-        }
-
-        String username = (String) payload.get("username");
-        String password = (String) payload.get("password");
-
-        Connection conn = RestServiceApplication.getConnection();
-
-        try (PreparedStatement stmt = conn.prepareStatement("select 1 from person where username = ? and password = ?")) {
-            stmt.setString(1, username);
-            stmt.setString(2, password);
-            ResultSet rows = stmt.executeQuery();
-
-            if (!rows.next()) {
-                logger.warn("invalid credentials");
-                returnData.put("status", StatusCode.API_ERROR.code());
-                returnData.put("errors", "invalid credentials");
-                return returnData;
-            } else {
-                String token = jwtUtil.generateTokenJWT(username);
-                returnData.put("status", StatusCode.SUCCESS.code());
-                returnData.put("token", token);
-            }
-
-        } catch (SQLException ex) {
-            logger.error("Error in DB", ex);
-            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
-            returnData.put("errors", ex.getMessage());
-            ;
-        } finally {
-            try {
-                conn.close();
-            } catch (SQLException ex) {
-                logger.error("Error in DB", ex);
-            }
-        }
-
-        return returnData;
-    }
-
-    // List all auctions using JWT tokens
-
-    @GetMapping(value = "/auctions", produces = "application/json")
-    @ResponseBody
-    public Map<String, Object> getAllAuctions(@RequestHeader("x-access-tokens") String token) {
-        // Token validation if using JWT
-        if (!jwtUtil.validateTokenJWT(token))
-            return invalidToken();
-
-        logger.info("###              DEMO: GET /departments              ### ");
-
-        Map<String, Object> returnData = new HashMap<String, Object>();
-        List<Map<String, Object>> results = new ArrayList<>();
-
-        Connection conn = RestServiceApplication.getConnection();
-
-        try (Statement stmt = conn.createStatement()) {
-            ResultSet rows = stmt.executeQuery("SELECT aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id FROM auction");
-            logger.debug("---- auctions  ----");
-            while (rows.next()) {
-                Map<String, Object> content = new HashMap<>();
-
-                content.put("aid", rows.getString("aid"));
-                content.put("isbn", rows.getString("isbn"));
-                content.put("start_date", rows.getString("start_date"));
-                content.put("end_date", rows.getString("end_date"));
-                content.put("current_bid", rows.getString("current_bid"));
-                content.put("description", rows.getString("description"));
-                content.put("item_isbn", rows.getString("item_isbn"));
-                content.put("seller_person_id", rows.getString("seller_person_id"));
-                results.add(content);
-            }
-
-            returnData.put("status", StatusCode.SUCCESS.code());
-            returnData.put("results", results);
-
-        } catch (SQLException ex) {
-            logger.error("Error in DB", ex);
-            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
-            returnData.put("errors", ex.getMessage());
-        } finally {
-            try {
-                conn.close();
-            } catch (SQLException ex) {
-                logger.error("Error in DB", ex);
-            }
-        }
-
-        return returnData;
-    }
-
-    // List auction by ID using JWT tokens
-
-    @GetMapping(value = "/auction/{aid}", produces = "application/json")
-    @ResponseBody
-    public Map<String, Object> getAuctionById(
-            @RequestHeader("x-access-tokens") String token,
-            @PathVariable("aid") Integer aid) {
-        // Token validation if using JWT
-        if (!jwtUtil.validateTokenJWT(token))
-            return invalidToken();
-
-        logger.info("###              DEMO: GET /auction              ### ");
-
-        Map<String, Object> returnData = new HashMap<String, Object>();
-        List<Map<String, Object>> results = new ArrayList<>();
-
-        Connection conn = RestServiceApplication.getConnection();
-
-        try {
-            Statement stmt = conn.createStatement();
-            PreparedStatement ps = conn.prepareStatement("SELECT aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id FROM auction WHERE aid = ?");
-            ps.setInt(1, aid);
-            ResultSet rows = ps.executeQuery();
-            logger.debug("---- auction  ----");
-            if (rows.next()) {
-                Map<String, Object> content = new HashMap<>();
-
-                content.put("aid", rows.getString("aid"));
-                content.put("isbn", rows.getString("isbn"));
-                content.put("start_date", rows.getString("start_date"));
-                content.put("end_date", rows.getString("end_date"));
-                content.put("current_bid", rows.getString("current_bid"));
-                content.put("description", rows.getString("description"));
-                content.put("item_isbn", rows.getString("item_isbn"));
-                content.put("seller_person_id", rows.getString("seller_person_id"));
-                results.add(content);
-            }
-
-            returnData.put("status", StatusCode.SUCCESS.code());
-            returnData.put("results", results);
-
-        } catch (SQLException ex) {
-            logger.error("Error in DB", ex);
-            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
-            returnData.put("errors", ex.getMessage());
-        } finally {
-            try {
-                conn.close();
-            } catch (SQLException ex) {
-                logger.error("Error in DB", ex);
-            }
-        }
-
-        return returnData;
-    }
-
     // Add User
-    // curl -X POST http://localhost:8080/user/ -H 'Content-Type: application/json' -H "x-access-tokens: ssmith339965530" -d '{"ename": "PETER", "job": "ANALYST", "sal": 100, "dname": "SALES"}'
-
     @PostMapping(value = "/user/", consumes = "application/json")
     @ResponseBody
     public Map<String, Object> addUser(
@@ -314,7 +154,7 @@ public class DemoProj {
             //Checks to ensure it was successful
             if (affectedRows == 1) {
                 returnData.put("status", StatusCode.SUCCESS.code());
-                returnData.put("id", userID);
+                returnData.put("userId", userID);
 
                 conn.commit();
             } else {
@@ -344,195 +184,44 @@ public class DemoProj {
         return returnData;
     }
 
-    // Edit auction by AID using JWT tokens
-
-    @PutMapping(value = "/auction/{aid}", produces = "application/json")
-    @ResponseBody
-    public Map<String, Object> editAuctionById(
-            @RequestHeader("x-access-tokens") String token,
-            @PathVariable("aid") Integer aid,
-            @RequestBody Map<String, Object> payload) {
-
+    // Login user using JWT tokens
+    @PutMapping("/loginJWT")
+    public Map<String, Object> loginUserJWT(@RequestBody Map<String, Object> payload) {
         Map<String, Object> returnData = new HashMap<String, Object>();
 
-        //Token validation if using JWT
-        if (!jwtUtil.validateTokenJWT(token))
-            return invalidToken();
-        //validate that payload contains
-        if (!(payload.containsKey("description"))) {
-            logger.warn("missing inputs");
+        if (!payload.containsKey("username") || !payload.containsKey("password")) {
+            logger.warn("missing credentials");
             returnData.put("status", StatusCode.API_ERROR.code());
-            returnData.put("errors", "missing inputs");
+            returnData.put("errors", "missing credentials");
             return returnData;
         }
-        logger.info("###              DEMO: PUT /editAuction              ### ");
 
-        List<Map<String, Object>> results = new ArrayList<>();
-
-        Connection conn = RestServiceApplication.getConnection();
-
-        try {
-            //chcks if AID is in auctions
-            Statement stmt = conn.createStatement();
-            PreparedStatement ps = conn.prepareStatement("SELECT aid FROM auction WHERE aid = ?");
-            ps.setInt(1, aid);
-            ResultSet rows = ps.executeQuery();
-            logger.debug("---- auction  ----");
-
-            if (rows.next()) {
-                ps = conn.prepareStatement("UPDATE auctions SET description = ? WHERE aid = ?");
-                ps.setString(1, (String) payload.get("description"));
-                ps.setInt(2, aid);
-                int affectedRows = ps.executeUpdate();
-                if (affectedRows == 1) {
-                    returnData.put("Status", StatusCode.SUCCESS.code());
-                    returnData.put("Results", aid);
-                    conn.commit();
-                } else {
-                    returnData.put("status", StatusCode.API_ERROR.code());
-                    returnData.put("results", "error updating auction");
-                    conn.rollback();
-                }
-            } else {
-                returnData.put("status", StatusCode.API_ERROR.code());
-                returnData.put("results", "auction does not exist");
-                conn.rollback();
-            }
-
-        } catch (SQLException ex) {
-            logger.error("Error in DB", ex);
-            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
-            returnData.put("errors", ex.getMessage());
-        } finally {
-            try {
-                conn.close();
-            } catch (SQLException ex) {
-                logger.error("Error in DB", ex);
-            }
-        }
-
-        return returnData;
-    }
-
-    /**
-     * Method for creating a bid
-     *
-     * @param token
-     * @param aid
-     * @return
-     * @author Sergio
-     */
-    @GetMapping(value = "/bid/{aid}/{bid}", produces = "application/json")
-    @ResponseBody
-    public Map<String, Object> placeBid(
-            @RequestHeader("x-access-tokens") String token,
-            @PathVariable("aid") Integer aid,
-            @PathVariable("bid") Float bid) {
-        // Token validation if using JWT
-        if (!jwtUtil.validateTokenJWT(token))
-            return invalidToken();
-
-        logger.info("###              DEMO: GET /placeBid              ### ");
-
-        Map<String, Object> returnData = new HashMap<String, Object>();
-        List<Map<String, Object>> results = new ArrayList<>();
+        String username = (String) payload.get("username");
+        String password = (String) payload.get("password");
 
         Connection conn = RestServiceApplication.getConnection();
-        //get username
-        String username = jwtUtil.getTokenUsername(token);
-        try {
-            Statement stmt = conn.createStatement();
-            //gets auction_isbn, current_bid
-            PreparedStatement ps = conn.prepareStatement("SELECT isbn, current_bid from AUCTION where aid = ?");
-            ps.setInt(1, aid);
-            ResultSet rows = ps.executeQuery();
-            rows.next();
-            int auction_isbn = rows.getInt("isbn");
-            double auctionCurrentBid = rows.getFloat("current_bid");
-            //Checks if users placed bid is higher than stored bid.
-            if (auctionCurrentBid >= bid) {
+
+        try (PreparedStatement stmt = conn.prepareStatement("select 1 from person where username = ? and password = ?")) {
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+            ResultSet rows = stmt.executeQuery();
+
+            if (!rows.next()) {
+                logger.warn("invalid credentials");
                 returnData.put("status", StatusCode.API_ERROR.code());
-                returnData.put("Error:", "Your bid is less than current bid");
+                returnData.put("errors", "invalid credentials");
                 return returnData;
-            }
-
-            //Gets User_ID as bidder_id
-            ps = conn.prepareStatement("SELECT id from Person where username = ?");
-            ps.setString(1, username);
-            rows = ps.executeQuery();
-            rows.next();
-            //does an SQL call to see if ID is already in buyer DB
-            int bidder_id = rows.getInt("id");
-            ps = conn.prepareStatement("SELECT person_id from Buyer WHERE person_id = ?");
-            ps.setInt(1, bidder_id);
-            rows = ps.executeQuery();
-
-            //check IF user is a new bidder
-            if (!(rows.next())) {
-                //Adds User to Buyer
-                ps = conn.prepareStatement("INSERT INTO Buyer (person_id, bids_placed, items_won) VALUES (?, 1, 0)");
-                ps.setInt(1, bidder_id);
-                ps.executeUpdate();
-                conn.commit();
-            } else { //Updates the buyers info if they have an existing record.
-                ps = conn.prepareStatement("UPDATE Buyer set bids_placed = bids_placed + 1 WHERE person_id = ?");
-                ps.setInt(1, bidder_id);
-                ps.executeUpdate();
-                conn.commit();
-            }
-
-            rows = stmt.executeQuery("select coalesce(max(bid_id), 1) as bid_id from bid");
-            rows.next();
-            //gets next bid id
-            int bid_ID = rows.getInt("bid_id") + 1;
-
-
-            logger.debug("---- adding bid to bid  ----");
-            //adds bid into bid DB
-            Map<String, Object> content = new HashMap<>();
-            ps = conn.prepareStatement("INSERT INTO bid (bid_id, bid_amount, bid_time, auction_aid, auction_isbn, buyer_person_id) VALUES (?, ?, ?, ?, ?, ?)");
-            ps.setInt(1, bid_ID);
-            ps.setFloat(2, bid);
-            ps.setDate(3, java.sql.Date.valueOf(java.time.LocalDate.now()));
-            ps.setInt(4, aid);
-            ps.setInt(5, auction_isbn);
-            ps.setInt(6, bidder_id);
-            results.add(content);
-            int affectedRows = ps.executeUpdate();
-            //Checks to ensure it was successful
-            if (affectedRows == 1) {
-                returnData.put("status", StatusCode.SUCCESS.code());
-                returnData.put("bid inserted", bid_ID);
-
-                conn.commit();
             } else {
-                returnData.put("status", StatusCode.API_ERROR.code());
-                returnData.put("errors", "Could not insert");
-
-                conn.rollback();
-            }
-
-            //updates current bid in auction
-            ps = conn.prepareStatement("UPDATE auction set current_bid = ? WHERE aid = ?");
-            ps.setFloat(1, bid);
-            ps.setInt(2, aid);
-            affectedRows = ps.executeUpdate();
-            if (affectedRows == 1) {
+                String token = jwtUtil.generateTokenJWT(username);
                 returnData.put("status", StatusCode.SUCCESS.code());
-                returnData.put("auction updated", aid);
-
-                conn.commit();
-            } else {
-                returnData.put("status", StatusCode.API_ERROR.code());
-                returnData.put("errors", "Could not insert");
-
-                conn.rollback();
+                returnData.put("authToken", token);
             }
 
         } catch (SQLException ex) {
             logger.error("Error in DB", ex);
             returnData.put("status", StatusCode.INTERNAL_ERROR.code());
             returnData.put("errors", ex.getMessage());
+            ;
         } finally {
             try {
                 conn.close();
@@ -545,8 +234,6 @@ public class DemoProj {
     }
 
     // Create Auction
-    // curl -X POST http://localhost:8080/user/ -H 'Content-Type: application/json' -H "x-access-tokens: ssmith339965530" -d '{"ename": "PETER", "job": "ANALYST", "sal": 100, "dname": "SALES"}'
-
     @PostMapping(value = "/auction/", consumes = "application/json")
     @ResponseBody
     public Map<String, Object> createAuction(
@@ -646,7 +333,7 @@ public class DemoProj {
             //Checks to ensure it was successful
             if (affectedRows == 1) {
                 returnData.put("status", StatusCode.SUCCESS.code());
-                returnData.put("auction_id", aID);
+                returnData.put("auctionId", aID);
 
                 conn.commit();
             } else {
@@ -676,6 +363,56 @@ public class DemoProj {
         return returnData;
     }
 
+    // List all auctions using JWT tokens
+    @GetMapping(value = "/auctions", produces = "application/json")
+    @ResponseBody
+    public Map<String, Object> getAllAuctions(@RequestHeader("x-access-tokens") String token) {
+        // Token validation if using JWT
+        if (!jwtUtil.validateTokenJWT(token))
+            return invalidToken();
+
+        logger.info("###              DEMO: GET /departments              ### ");
+
+        Map<String, Object> returnData = new HashMap<String, Object>();
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        Connection conn = RestServiceApplication.getConnection();
+
+        try (Statement stmt = conn.createStatement()) {
+            ResultSet rows = stmt.executeQuery("SELECT aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id FROM auction");
+            logger.debug("---- auctions  ----");
+            while (rows.next()) {
+                Map<String, Object> content = new HashMap<>();
+
+                content.put("aid", rows.getString("aid"));
+                content.put("isbn", rows.getString("isbn"));
+                content.put("start_date", rows.getString("start_date"));
+                content.put("end_date", rows.getString("end_date"));
+                content.put("current_bid", rows.getString("current_bid"));
+                content.put("description", rows.getString("description"));
+                content.put("item_isbn", rows.getString("item_isbn"));
+                content.put("seller_person_id", rows.getString("seller_person_id"));
+                results.add(content);
+            }
+
+            returnData.put("status", StatusCode.SUCCESS.code());
+            returnData.put("results", results);
+
+        } catch (SQLException ex) {
+            logger.error("Error in DB", ex);
+            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
+            returnData.put("errors", ex.getMessage());
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException ex) {
+                logger.error("Error in DB", ex);
+            }
+        }
+
+        return returnData;
+    }
+
     // Search existing auction by string
     @GetMapping(value = "/auctions/{keyword:[A-Za-z]+}", produces = "application/json")
     @ResponseBody
@@ -702,7 +439,7 @@ public class DemoProj {
             if (rows.next()) {
                 Map<String, Object> content = new HashMap<>();
 
-                content.put("aid", rows.getString("aid"));
+                content.put("auctionId", rows.getString("aid"));
                 content.put("description", rows.getString("description"));
                 results.add(content);
             }
@@ -752,7 +489,7 @@ public class DemoProj {
             if (rows.next()) {
                 Map<String, Object> content = new HashMap<>();
 
-                content.put("aid", rows.getString("aid"));
+                content.put("auctionId", rows.getString("aid"));
                 content.put("description", rows.getString("description"));
                 results.add(content);
             }
@@ -775,4 +512,254 @@ public class DemoProj {
 
         return returnData;
     }
+
+    // List auction by ID using JWT tokens
+    @GetMapping(value = "/auction/{aid}", produces = "application/json")
+    @ResponseBody
+    public Map<String, Object> getAuctionById(
+            @RequestHeader("x-access-tokens") String token,
+            @PathVariable("aid") Integer aid) {
+        // Token validation if using JWT
+        if (!jwtUtil.validateTokenJWT(token))
+            return invalidToken();
+
+        logger.info("###              DEMO: GET /auction              ### ");
+
+        Map<String, Object> returnData = new HashMap<String, Object>();
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        Connection conn = RestServiceApplication.getConnection();
+
+        try {
+            Statement stmt = conn.createStatement();
+            PreparedStatement ps = conn.prepareStatement("SELECT aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id FROM auction WHERE aid = ?");
+            ps.setInt(1, aid);
+            ResultSet rows = ps.executeQuery();
+            logger.debug("---- auction  ----");
+            if (rows.next()) {
+                Map<String, Object> content = new HashMap<>();
+
+                content.put("aid", rows.getString("aid"));
+                content.put("isbn", rows.getString("isbn"));
+                content.put("start_date", rows.getString("start_date"));
+                content.put("end_date", rows.getString("end_date"));
+                content.put("current_bid", rows.getString("current_bid"));
+                content.put("description", rows.getString("description"));
+                content.put("item_isbn", rows.getString("item_isbn"));
+                content.put("seller_person_id", rows.getString("seller_person_id"));
+                results.add(content);
+            }
+
+            returnData.put("status", StatusCode.SUCCESS.code());
+            returnData.put("results", results);
+
+        } catch (SQLException ex) {
+            logger.error("Error in DB", ex);
+            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
+            returnData.put("errors", ex.getMessage());
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException ex) {
+                logger.error("Error in DB", ex);
+            }
+        }
+        return returnData;
+    }
+
+    /**
+     * Method for creating a bid
+     *
+     * @param token
+     * @param aid
+     * @return
+     * @author Sergio
+     */
+    @GetMapping(value = "/bid/{aid}/{bid}", produces = "application/json")
+    @ResponseBody
+    public Map<String, Object> placeBid(
+            @RequestHeader("x-access-tokens") String token,
+            @PathVariable("aid") Integer aid,
+            @PathVariable("bid") Float bid) {
+        // Token validation if using JWT
+        if (!jwtUtil.validateTokenJWT(token))
+            return invalidToken();
+
+        logger.info("###              DEMO: GET /placeBid              ### ");
+
+        Map<String, Object> returnData = new HashMap<String, Object>();
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        Connection conn = RestServiceApplication.getConnection();
+        //get username
+        String username = jwtUtil.getTokenUsername(token);
+        try {
+            Statement stmt = conn.createStatement();
+            //gets auction_isbn, current_bid
+            PreparedStatement ps = conn.prepareStatement("SELECT isbn, current_bid from AUCTION where aid = ?");
+            ps.setInt(1, aid);
+            ResultSet rows = ps.executeQuery();
+            rows.next();
+            int auction_isbn = rows.getInt("isbn");
+            double auctionCurrentBid = rows.getFloat("current_bid");
+            //Checks if users placed bid is higher than stored bid.
+            if (auctionCurrentBid >= bid) {
+                returnData.put("status", StatusCode.API_ERROR.code());
+                returnData.put("Error:", "Your bid is less than the current bid");
+                return returnData;
+            }
+
+            //Gets User_ID as bidder_id
+            ps = conn.prepareStatement("SELECT id from Person where username = ?");
+            ps.setString(1, username);
+            rows = ps.executeQuery();
+            rows.next();
+            //does an SQL call to see if ID is already in buyer DB
+            int bidder_id = rows.getInt("id");
+            ps = conn.prepareStatement("SELECT person_id from Buyer WHERE person_id = ?");
+            ps.setInt(1, bidder_id);
+            rows = ps.executeQuery();
+
+            //check IF user is a new bidder
+            if (!(rows.next())) {
+                //Adds User to Buyer
+                ps = conn.prepareStatement("INSERT INTO Buyer (person_id, bids_placed, items_won) VALUES (?, 1, 0)");
+                ps.setInt(1, bidder_id);
+                ps.executeUpdate();
+                conn.commit();
+            } else { //Updates the buyers info if they have an existing record.
+                ps = conn.prepareStatement("UPDATE Buyer set bids_placed = bids_placed + 1 WHERE person_id = ?");
+                ps.setInt(1, bidder_id);
+                ps.executeUpdate();
+                conn.commit();
+            }
+
+            rows = stmt.executeQuery("select coalesce(max(bid_id), 1) as bid_id from bid");
+            rows.next();
+            //gets next bid id
+            int bid_ID = rows.getInt("bid_id") + 1;
+
+
+            logger.debug("---- adding bid to bid  ----");
+            //adds bid into bid DB
+            Map<String, Object> content = new HashMap<>();
+            ps = conn.prepareStatement("INSERT INTO bid (bid_id, bid_amount, bid_time, auction_aid, auction_isbn, buyer_person_id) VALUES (?, ?, ?, ?, ?, ?)");
+            ps.setInt(1, bid_ID);
+            ps.setFloat(2, bid);
+            ps.setDate(3, java.sql.Date.valueOf(java.time.LocalDate.now()));
+            ps.setInt(4, aid);
+            ps.setInt(5, auction_isbn);
+            ps.setInt(6, bidder_id);
+            results.add(content);
+            int affectedRows = ps.executeUpdate();
+            //Checks to ensure it was successful
+            if (affectedRows == 1) {
+                returnData.put("status", StatusCode.SUCCESS.code());
+                returnData.put("bid inserted", bid_ID);
+
+                conn.commit();
+            } else {
+                returnData.put("status", StatusCode.API_ERROR.code());
+                returnData.put("errors", "Could not insert");
+
+                conn.rollback();
+            }
+            //updates current bid in auction
+            ps = conn.prepareStatement("UPDATE auction set current_bid = ? WHERE aid = ?");
+            ps.setFloat(1, bid);
+            ps.setInt(2, aid);
+            affectedRows = ps.executeUpdate();
+            if (affectedRows == 1) {
+                returnData.put("status", StatusCode.SUCCESS.code());
+                returnData.put("auction updated", aid);
+
+                conn.commit();
+            } else {
+                returnData.put("status", StatusCode.API_ERROR.code());
+                returnData.put("errors", "Could not insert");
+
+                conn.rollback();
+            }
+        } catch (SQLException ex) {
+            logger.error("Error in DB", ex);
+            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
+            returnData.put("errors", ex.getMessage());
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException ex) {
+                logger.error("Error in DB", ex);
+            }
+        }
+        return returnData;
+    } 
+
+    // Edit auction by AID using JWT tokens
+    @PutMapping(value = "/auction/{aid}", produces = "application/json")
+    @ResponseBody
+    public Map<String, Object> editAuctionById(
+            @RequestHeader("x-access-tokens") String token,
+            @PathVariable("aid") Integer aid,
+            @RequestBody Map<String, Object> payload) {
+
+        Map<String, Object> returnData = new HashMap<String, Object>();
+
+        //Token validation if using JWT
+        if (!jwtUtil.validateTokenJWT(token))
+            return invalidToken();
+        //validate that payload contains
+        if (!(payload.containsKey("description"))) {
+            logger.warn("missing inputs");
+            returnData.put("status", StatusCode.API_ERROR.code());
+            returnData.put("errors", "missing inputs");
+            return returnData;
+        }
+        logger.info("###              DEMO: PUT /editAuction              ### ");
+
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        Connection conn = RestServiceApplication.getConnection();
+
+        try {
+            //chcks if AID is in auctions
+            Statement stmt = conn.createStatement();
+            PreparedStatement ps = conn.prepareStatement("SELECT aid FROM auction WHERE aid = ?");
+            ps.setInt(1, aid);
+            ResultSet rows = ps.executeQuery();
+            logger.debug("---- auction  ----");
+
+            if (rows.next()) {
+                ps = conn.prepareStatement("UPDATE auctions SET description = ? WHERE aid = ?");
+                ps.setString(1, (String) payload.get("description"));
+                ps.setInt(2, aid);
+                int affectedRows = ps.executeUpdate();
+                if (affectedRows == 1) {
+                    returnData.put("Status", StatusCode.SUCCESS.code());
+                    returnData.put("Results", aid);
+                    conn.commit();
+                } else {
+                    returnData.put("status", StatusCode.API_ERROR.code());
+                    returnData.put("results", "error updating auction");
+                    conn.rollback();
+                }
+            } else {
+                returnData.put("status", StatusCode.API_ERROR.code());
+                returnData.put("results", "auction does not exist");
+                conn.rollback();
+            }
+
+        } catch (SQLException ex) {
+            logger.error("Error in DB", ex);
+            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
+            returnData.put("errors", ex.getMessage());
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException ex) {
+                logger.error("Error in DB", ex);
+            }
+        }
+
+        return returnData;
+    } 
 }
