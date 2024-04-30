@@ -852,4 +852,92 @@ public class DemoProj {
 
         return returnData;
     }
+
+    // Close an auction
+    @GetMapping(value = "/auction/{aid}/close", produces = "application/json")
+    @ResponseBody
+    public Map<String, Object> closeAuction(
+            @RequestHeader("x-access-tokens") String token,
+            @PathVariable("aid") Integer aid) {
+        // Token validation if using JWT
+        if (!jwtUtil.validateTokenJWT(token))
+            return invalidToken();
+
+        logger.info("###              DEMO: GET /auction              ### ");
+
+        Map<String, Object> returnData = new HashMap<String, Object>();
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        Connection conn = RestServiceApplication.getConnection();
+        String username = jwtUtil.getTokenUsername(token);
+
+        try {
+            Statement stmt = conn.createStatement();
+            PreparedStatement ps = conn.prepareStatement("SELECT seller_person_id, end_date FROM auction WHERE aid = ?");
+            ps.setInt(1, aid);
+            ResultSet rows = ps.executeQuery();
+            rows.next();
+            int sellerId = rows.getInt("seller_person_id");
+            Date endDate = rows.getDate("end_date");
+
+            ps = conn.prepareStatement("SELECT id from Person where username = ?");
+            ps.setString(1, username);
+            rows = ps.executeQuery();
+            rows.next();
+            int userId = rows.getInt("id");
+
+            if (sellerId != userId) {
+                returnData.put("status", StatusCode.API_ERROR.code());
+                returnData.put("Error:", "Only the seller of the auction can close this auction");
+                return returnData;
+            }
+            if (endDate.after(new Date(System.currentTimeMillis()))) {
+                returnData.put("status", StatusCode.API_ERROR.code());
+                returnData.put("Error", "Auction has not ended yet and cannot be closed");
+                return returnData;
+            }
+
+            ps = conn.prepareStatement("SELECT buyer_person_id, max(bid_amount) as highest_bid FROM bid WHERE auction_aid = ? GROUP BY buyer_person_id ORDER BY max(bid_amount) DESC LIMIT 1");
+            ps.setInt(1, aid);
+            rows = ps.executeQuery();
+            if (rows.next()) {
+                int buyerId = rows.getInt("buyer_person_id");
+                float highestBid = rows.getFloat("highest_bid");
+
+                // Update items won for the highest bidder
+                ps = conn.prepareStatement("UPDATE buyer SET items_won = items_won + 1 WHERE person_id = ?");
+                ps.setInt(1, buyerId);
+                ps.executeUpdate();
+            
+                // Close the auction
+                ps = conn.prepareStatement("UPDATE auction SET current_bid = ? WHERE aid = ?");
+                ps.setFloat(1, highestBid);
+                ps.setInt(2, aid);
+                ps.executeUpdate();
+
+                returnData.put("status", StatusCode.SUCCESS.code());
+                returnData.put("Message", "Auction closed successfully");
+                returnData.put("Winner ID", buyerId);
+                returnData.put("Highest Bid", highestBid);
+            } else {
+                returnData.put("status", StatusCode.API_ERROR.code());
+                returnData.put("Message", "No bids placed for this auction");
+            }
+
+            returnData.put("status", StatusCode.SUCCESS.code());
+            returnData.put("results", results);
+
+        } catch (SQLException ex) {
+            logger.error("Error in DB", ex);
+            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
+            returnData.put("errors", ex.getMessage());
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException ex) {
+                logger.error("Error in DB", ex);
+            }
+        }
+        return returnData;
+    }
 }
