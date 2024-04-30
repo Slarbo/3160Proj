@@ -622,9 +622,10 @@ public class DemoProj {
             }
 
             //Checks status on Auction if it is accepting bids
-            ps = conn.prepareStatement("SELECT aid, item_status from item, auction where aid = ? AND auction.isbn = item.item_status");
+            ps = conn.prepareStatement("SELECT aid, item_status from item, auction where aid = ? AND auction.isbn = item.isbn");
             ps.setInt(1, aid);
             rows = ps.executeQuery();
+            rows.next();
             boolean status = rows.getBoolean("item_status");
             if (status){
                 returnData.put("Auction,", "is closed and not accepting bids at this time.");
