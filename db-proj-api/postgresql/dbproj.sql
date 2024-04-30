@@ -58,18 +58,6 @@ CREATE TABLE buyer (
 	PRIMARY KEY(person_id)
 );
 
-CREATE TABLE auction_history (
-	aid		 INTEGER,
-	isbn	 INTEGER,
-	start_date	 DATE,
-	end_date	 DATE,
-	current_bid	 INTEGER,
-	description	 VARCHAR(1000),
-	auction_aid	 INTEGER NOT NULL,
-	auction_isbn INTEGER NOT NULL,
-	PRIMARY KEY(aid,isbn)
-);
-
 ALTER TABLE seller ADD CONSTRAINT seller_fk1 FOREIGN KEY (person_id) REFERENCES person(id);
 ALTER TABLE bid ADD CONSTRAINT bid_fk1 FOREIGN KEY (auction_aid, auction_isbn) REFERENCES auction(aid, isbn);
 ALTER TABLE bid ADD CONSTRAINT bid_fk2 FOREIGN KEY (buyer_person_id) REFERENCES buyer(person_id);
@@ -77,4 +65,39 @@ ALTER TABLE item ADD CONSTRAINT item_fk1 FOREIGN KEY (category_category_id) REFE
 ALTER TABLE auction ADD CONSTRAINT auction_fk1 FOREIGN KEY (item_isbn) REFERENCES item(isbn);
 ALTER TABLE auction ADD CONSTRAINT auction_fk2 FOREIGN KEY (seller_person_id) REFERENCES seller(person_id);
 ALTER TABLE buyer ADD CONSTRAINT buyer_fk1 FOREIGN KEY (person_id) REFERENCES person(id);
-ALTER TABLE auction_history ADD CONSTRAINT auction_history_fk1 FOREIGN KEY (auction_aid, auction_isbn) REFERENCES auction(aid, isbn);
+
+CREATE TABLE auction_history (
+    history_id INTEGER IDENTITY(1,1) PRIMARY KEY,
+    operation_type VARCHAR(10) NOT NULL,
+    operation_timestamp DATETIME NOT NULL DEFAULT GETDATE(),
+    aid INTEGER,
+    isbn INTEGER,
+    start_date DATE,
+    end_date DATE,
+    current_bid INTEGER,
+    description VARCHAR(1000),
+    item_isbn INTEGER,
+    seller_person_id INTEGER
+);
+GO
+
+CREATE TRIGGER trg_auction_insert
+ON auction
+AFTER INSERT
+AS
+BEGIN
+    INSERT INTO auction_history (operation_type, aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id)
+    SELECT 'INSERT', inserted.aid, inserted.isbn, inserted.start_date, inserted.end_date, inserted.current_bid, inserted.description, inserted.item_isbn, inserted.seller_person_id
+    FROM inserted;
+END;
+GO
+
+CREATE TRIGGER trg_auction_update
+ON auction
+AFTER UPDATE
+AS
+BEGIN
+    INSERT INTO auction_history (operation_type, aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id)
+    SELECT 'UPDATE', deleted.aid, deleted.isbn, deleted.start_date, deleted.end_date, deleted.current_bid, deleted.description, deleted.item_isbn, deleted.seller_person_id
+    FROM deleted;
+END;
