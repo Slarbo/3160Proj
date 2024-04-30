@@ -142,8 +142,20 @@ public class DemoProj {
             ResultSet rows = stmt.executeQuery("select coalesce(max(id),1) as id from Person"); //was "select coalesce(max(empno),1) empno from emp"
             rows.next();
             int userID = rows.getInt("id") + 1;
+
+
+            //Checks if username is already being used
+            PreparedStatement ps = conn.prepareStatement("select name from Person where username = ?");
+            ps.setString(1, (String) payload.get("username"));
+            rows = ps.executeQuery();
+            if (rows.next()) {
+                returnData.put("Username:", "Duplicate username detected.");
+                conn.close();
+                return returnData;
+            }
+
             //Sets up the insertion of a new User
-            PreparedStatement ps = conn.prepareStatement("INSERT INTO Person (id, name, address, phone, username, password) VALUES (?, ?, ?, ?, ?, ?)");
+            ps = conn.prepareStatement("INSERT INTO Person (id, name, address, phone, username, password) VALUES (?, ?, ?, ?, ?, ?)");
             ps.setInt(1, userID);
             ps.setString(2, (String) payload.get("name"));
             ps.setString(3, (String) payload.get("address"));
@@ -606,6 +618,16 @@ public class DemoProj {
             if (auctionCurrentBid >= bid) {
                 returnData.put("status", StatusCode.API_ERROR.code());
                 returnData.put("Error:", "Your bid is less than the current bid");
+                return returnData;
+            }
+
+            //Checks status on Auction if it is accepting bids
+            ps = conn.prepareStatement("SELECT aid, item_status from item, auction where aid = ? AND auction.isbn = item.item_status");
+            ps.setInt(1, aid);
+            rows = ps.executeQuery();
+            boolean status = rows.getBoolean("item_status");
+            if (status){
+                returnData.put("Auction,", "is closed and not accepting bids at this time.");
                 return returnData;
             }
 
