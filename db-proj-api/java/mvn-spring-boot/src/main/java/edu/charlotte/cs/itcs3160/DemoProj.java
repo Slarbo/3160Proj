@@ -14,6 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -622,12 +623,12 @@ public class DemoProj {
             }
 
             //Checks status on Auction if it is accepting bids
-            ps = conn.prepareStatement("SELECT aid, item_status from item, auction where aid = ? AND auction.isbn = item.isbn");
+            ps = conn.prepareStatement("SELECT aid, end_date from auction where aid = ?");
             ps.setInt(1, aid);
             rows = ps.executeQuery();
             rows.next();
-            boolean status = rows.getBoolean("item_status");
-            if (status){
+            Date end_date = rows.getDate("end_date");
+            if (end_date.before(new Date(System.currentTimeMillis()))){
                 returnData.put("Auction,", "is closed and not accepting bids at this time.");
                 return returnData;
             }
