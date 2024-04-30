@@ -775,5 +775,57 @@ public class DemoProj {
         }
 
         return returnData;
-    } 
+    }
+
+    // List historical auctions
+    @GetMapping(value = "/auctions/history", produces = "application/json")
+    @ResponseBody
+    public Map<String, Object> getAuctionHistory(@RequestHeader("x-access-tokens") String token) {
+        // Token validation if using JWT
+        if (!jwtUtil.validateTokenJWT(token))
+            return invalidToken();
+
+        logger.info("###              DEMO: GET /departments              ### ");
+
+        Map<String, Object> returnData = new HashMap<String, Object>();
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        Connection conn = RestServiceApplication.getConnection();
+
+        try (Statement stmt = conn.createStatement()) {
+            ResultSet rows = stmt.executeQuery("SELECT history_id, operation_type, aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id FROM auction_history");
+            logger.debug("---- auctions  ----");
+            while (rows.next()) {
+                Map<String, Object> content = new HashMap<>();
+
+                content.put("history_id", rows.getString("history_id"));
+                content.put("operation_type", rows.getString("operation_type"));
+                content.put("aid", rows.getString("aid"));
+                content.put("isbn", rows.getString("isbn"));
+                content.put("start_date", rows.getString("start_date"));
+                content.put("end_date", rows.getString("end_date"));
+                content.put("current_bid", rows.getString("current_bid"));
+                content.put("description", rows.getString("description"));
+                content.put("item_isbn", rows.getString("item_isbn"));
+                content.put("seller_person_id", rows.getString("seller_person_id"));
+                results.add(content);
+            }
+
+            returnData.put("status", StatusCode.SUCCESS.code());
+            returnData.put("results", results);
+
+        } catch (SQLException ex) {
+            logger.error("Error in DB", ex);
+            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
+            returnData.put("errors", ex.getMessage());
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException ex) {
+                logger.error("Error in DB", ex);
+            }
+        }
+
+        return returnData;
+    }
 }
