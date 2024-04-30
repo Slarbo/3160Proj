@@ -793,7 +793,7 @@ public class DemoProj {
         Connection conn = RestServiceApplication.getConnection();
 
         try (Statement stmt = conn.createStatement()) {
-            ResultSet rows = stmt.executeQuery("SELECT history_id, operation_type, aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id FROM auction_history");
+            ResultSet rows = stmt.executeQuery("SELECT history_id, operation_type, aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id FROM auction_history ORDER BY aid ASC");
             logger.debug("---- auctions  ----");
             while (rows.next()) {
                 Map<String, Object> content = new HashMap<>();
