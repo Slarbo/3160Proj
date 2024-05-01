@@ -390,7 +390,7 @@ public class DemoProj {
         Connection conn = RestServiceApplication.getConnection();
 
         try (Statement stmt = conn.createStatement()) {
-            ResultSet rows = stmt.executeQuery("SELECT aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id FROM auction");
+            ResultSet rows = stmt.executeQuery("SELECT aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id, isCancelled FROM auction");
             logger.debug("---- auctions  ----");
             while (rows.next()) {
                 Map<String, Object> content = new HashMap<>();
@@ -403,6 +403,7 @@ public class DemoProj {
                 content.put("description", rows.getString("description"));
                 content.put("item_isbn", rows.getString("item_isbn"));
                 content.put("seller_person_id", rows.getString("seller_person_id"));
+                content.put("isCancelled", rows.getString("isCancelled"));
                 results.add(content);
             }
 
@@ -543,7 +544,7 @@ public class DemoProj {
 
         try {
             Statement stmt = conn.createStatement();
-            PreparedStatement ps = conn.prepareStatement("SELECT aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id FROM auction WHERE aid = ?");
+            PreparedStatement ps = conn.prepareStatement("SELECT aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id, isCancelled FROM auction WHERE aid = ?");
             ps.setInt(1, aid);
             ResultSet rows = ps.executeQuery();
             logger.debug("---- auction  ----");
@@ -558,6 +559,7 @@ public class DemoProj {
                 content.put("description", rows.getString("description"));
                 content.put("item_isbn", rows.getString("item_isbn"));
                 content.put("seller_person_id", rows.getString("seller_person_id"));
+                content.put("isCancelled", rows.getString("isCancelled"));
                 results.add(content);
             }
 
