@@ -331,7 +331,7 @@ public class DemoProj {
             }
 
             //Sets up the insertion of a new auction
-            ps = conn.prepareStatement("INSERT INTO auction (aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            ps = conn.prepareStatement("INSERT INTO auction (aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id, isCancelled) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             ps.setInt(1, aID);
             ps.setInt(2, (Integer) payload.get("isbn"));
             ps.setDate(3, java.sql.Date.valueOf((String) payload.get("start_date")));
@@ -340,6 +340,7 @@ public class DemoProj {
             ps.setString(6, (String) payload.get("description"));
             ps.setInt(7, (Integer) payload.get("isbn"));
             ps.setInt(8, sellerId);
+            ps.setBoolean(9, false);
             int affectedRows = ps.executeUpdate();
             //Checks to ensure it was successful
             if (affectedRows == 1) {
@@ -617,6 +618,16 @@ public class DemoProj {
             if (auctionCurrentBid >= bid) {
                 returnData.put("status", StatusCode.API_ERROR.code());
                 returnData.put("Error:", "Your bid is less than the current bid");
+                return returnData;
+            }
+
+            conn.prepareStatement("SELECT isCancelled from AUCTION where aid = ?");
+            ps.setInt(1, aid);
+            rows = ps.executeQuery();
+            rows.next();
+            if(!(rows.getBoolean("isCancelled"))){
+                returnData.put("status", StatusCode.API_ERROR.code());
+                returnData.put("Error:", "This auction is not accepting bids at this moment. Try again later.");
                 return returnData;
             }
 
