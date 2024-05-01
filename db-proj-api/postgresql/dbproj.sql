@@ -34,7 +34,7 @@ CREATE TABLE item (
 
 CREATE TABLE auction (
 	aid		 INTEGER,
-	isCancelled BOOL,
+	is_cancelled VARCHAR(10),
 	isbn		 INTEGER,
 	start_date	 DATE,
 	end_date	 DATE,
