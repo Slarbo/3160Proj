@@ -627,7 +627,7 @@ public class DemoProj {
             ps.setInt(1, aid);
             rows = ps.executeQuery();
             rows.next();
-            boolean isCancelled = rows.getBoolean(1);
+            boolean isCancelled = rows.getBoolean("isCancelled");
             
             if(!(isCancelled)) {
                 returnData.put("status", StatusCode.API_ERROR.code());
