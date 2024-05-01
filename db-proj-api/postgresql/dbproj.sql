@@ -98,14 +98,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION log_auction_close()
-RETURNS TRIGGER AS $$
-BEGIN
-	INSERT INTO auction_history (operation_type, aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id)
-	VALUES ('CLOSED', NEW.aid, NEW.isbn, NEW.start_date, NEW.end_date, NEW.current_bid, NEW.description, NEW.item_isbn, NEW.seller_person_id);
-END;
-$$ LANGUAGE plpgsql;
-
 -- Triggers
 CREATE TRIGGER trigger_auction_insert
 AFTER INSERT ON auction
@@ -114,11 +106,6 @@ EXECUTE FUNCTION log_auction_insert();
 
 CREATE TRIGGER trigger_auction_update
 AFTER UPDATE ON auction
-FOR EACH ROW
-EXECUTE FUNCTION log_auction_update();
-
-CREATE TRIGGER trigger_auction_close
-AFTER UPDATE ON auction WHERE CURRENT_DATE > end_date
 FOR EACH ROW
 EXECUTE FUNCTION log_auction_update();
 

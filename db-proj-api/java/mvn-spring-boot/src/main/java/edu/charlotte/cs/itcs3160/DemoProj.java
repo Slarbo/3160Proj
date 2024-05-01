@@ -915,6 +915,10 @@ public class DemoProj {
                 ps.setInt(2, aid);
                 ps.executeUpdate();
 
+                ps = conn.prepareStatement("DELETE FROM auction WHERE aid = ?");
+                ps.setInt(1, aid);
+                ps.executeUpdate();
+
                 returnData.put("status", StatusCode.SUCCESS.code());
                 returnData.put("Message", "Auction closed successfully");
                 returnData.put("Winner ID", buyerId);
