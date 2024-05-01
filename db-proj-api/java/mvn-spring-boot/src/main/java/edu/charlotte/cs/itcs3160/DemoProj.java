@@ -623,13 +623,12 @@ public class DemoProj {
                 return returnData;
             }
             //Checks if auction isCancelled.
-            conn.prepareStatement("select isCancelled as is_cancelled from auction where aid = ?");
+            conn.prepareStatement("select is_cancelled from auction where aid = ?");
             ps.setInt(1, aid);
             rows = ps.executeQuery();
             rows.next();
-            boolean isCancelled = rows.getBoolean("is_cancelled");
-            
-            if(!(isCancelled)) {
+            String isCancelled = rows.getString("is_cancelled");
+            if(isCancelled.equals("true")) {
                 returnData.put("status", StatusCode.API_ERROR.code());
                 returnData.put("Error:", "This auction is not accepting bids at this moment. Try again later.");
                 return returnData;
