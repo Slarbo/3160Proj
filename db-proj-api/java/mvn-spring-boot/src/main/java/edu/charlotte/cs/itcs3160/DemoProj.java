@@ -340,7 +340,7 @@ public class DemoProj {
             ps.setString(6, (String) payload.get("description"));
             ps.setInt(7, (Integer) payload.get("isbn"));
             ps.setInt(8, sellerId);
-            ps.setBoolean(9, false);
+            ps.setString(9, "false");
             int affectedRows = ps.executeUpdate();
             //Checks to ensure it was successful
             if (affectedRows == 1) {
@@ -391,7 +391,7 @@ public class DemoProj {
         Connection conn = RestServiceApplication.getConnection();
 
         try (Statement stmt = conn.createStatement()) {
-            ResultSet rows = stmt.executeQuery("SELECT aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id, isCancelled FROM auction");
+            ResultSet rows = stmt.executeQuery("SELECT aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id, is_cancelled FROM auction");
             logger.debug("---- auctions  ----");
             while (rows.next()) {
                 Map<String, Object> content = new HashMap<>();
