@@ -627,7 +627,8 @@ public class DemoProj {
             ps.setInt(1, aid);
             rows = ps.executeQuery();
             rows.next();
-            if(!(rows.getBoolean("isCancelled"))){
+            boolean isCancelled = rows.getBoolean("isCancelled");
+            if(!(isCancelled)){
                 returnData.put("status", StatusCode.API_ERROR.code());
                 returnData.put("Error:", "This auction is not accepting bids at this moment. Try again later.");
                 return returnData;
