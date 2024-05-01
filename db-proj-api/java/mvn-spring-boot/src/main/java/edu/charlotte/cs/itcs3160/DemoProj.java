@@ -331,7 +331,7 @@ public class DemoProj {
             }
 
             //Sets up the insertion of a new auction
-            ps = conn.prepareStatement("INSERT INTO auction (aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id, isCancelled) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            ps = conn.prepareStatement("INSERT INTO auction (aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id, is_cancelled) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             ps.setInt(1, aID);
             ps.setInt(2, (Integer) payload.get("isbn"));
             ps.setDate(3, java.sql.Date.valueOf((String) payload.get("start_date")));
