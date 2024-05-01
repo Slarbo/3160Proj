@@ -125,9 +125,9 @@ INSERT INTO buyer (bids_placed, items_won, person_id) VALUES
 (3, 1, 3),
 (5, 2, 4);
 
-INSERT INTO item (isbn, item_status, title, category_category_id) VALUES
-(1001, TRUE, 'Antique Vase', 1),
-(1002, TRUE, 'Vintage Watch', 2);
+INSERT INTO item (isbn, title) VALUES
+(1001, 'Antique Vase'),
+(1002, 'Vintage Watch');
 
 INSERT INTO auction (aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id) VALUES
 (101, 1001, '2023-05-01', '2023-05-10', NULL, 'A beautiful antique vase from the 19th century.', 1001, 1),
