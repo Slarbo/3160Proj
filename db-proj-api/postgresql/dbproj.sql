@@ -33,7 +33,6 @@ CREATE TABLE category (
 
 CREATE TABLE item (
 	isbn		 INTEGER,
-	item_status		 BOOL,
 	title		 VARCHAR(30) NOT NULL,
 	category_category_id INTEGER NOT NULL,
 	PRIMARY KEY(isbn)
@@ -41,6 +40,7 @@ CREATE TABLE item (
 
 CREATE TABLE auction (
 	aid		 INTEGER,
+	isCancelled BOOL,
 	isbn		 INTEGER,
 	start_date	 DATE,
 	end_date	 DATE,
@@ -124,10 +124,6 @@ INSERT INTO person (name, address, phone, username, password) VALUES
 INSERT INTO buyer (bids_placed, items_won, person_id) VALUES
 (3, 1, 3),
 (5, 2, 4);
-
-INSERT INTO category (category_id) VALUES
-(1),
-(2);
 
 INSERT INTO item (isbn, item_status, title, category_category_id) VALUES
 (1001, TRUE, 'Antique Vase', 1),

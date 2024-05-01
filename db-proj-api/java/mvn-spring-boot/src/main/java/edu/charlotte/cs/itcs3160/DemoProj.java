@@ -323,11 +323,9 @@ public class DemoProj {
             rows = ps.executeQuery();
 
             if (!(rows.next())) {
-                ps = conn.prepareStatement("INSERT INTO item (isbn, item_status, title, category_category_id) VALUES (?, ?, ?, ?)");
+                ps = conn.prepareStatement("INSERT INTO item (isbn, title) VALUES (?, ?)");
                 ps.setInt(1, (Integer) payload.get("isbn"));
-                ps.setBoolean(2, false);
-                ps.setString(3, (String) payload.get("title"));
-                ps.setInt(4, 1);
+                ps.setString(2, (String) payload.get("title"));
                 ps.executeUpdate();
                 conn.commit();
             }
@@ -931,6 +929,74 @@ public class DemoProj {
             returnData.put("status", StatusCode.SUCCESS.code());
             returnData.put("results", results);
 
+        } catch (SQLException ex) {
+            logger.error("Error in DB", ex);
+            returnData.put("status", StatusCode.INTERNAL_ERROR.code());
+            returnData.put("errors", ex.getMessage());
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException ex) {
+                logger.error("Error in DB", ex);
+            }
+        }
+        return returnData;
+    }
+
+    // Cancel an Auction
+    @GetMapping(value = "/auction/{aid}/cancel", produces = "application/json")
+    @ResponseBody
+    public Map<String, Object> cancelAuction(
+            @RequestHeader("x-access-tokens") String token,
+            @PathVariable("aid") Integer aid) {
+        // Token validation if using JWT
+        if (!jwtUtil.validateTokenJWT(token))
+            return invalidToken();
+
+        logger.info("###              DEMO: GET /cancelAuction              ### ");
+
+        Map<String, Object> returnData = new HashMap<>();
+        Connection conn = RestServiceApplication.getConnection();
+        String username = jwtUtil.getTokenUsername(token);
+
+        try {
+            PreparedStatement ps = conn.prepareStatement("SELECT seller_person_id, end_date FROM auction WHERE aid = ?");
+            ps.setInt(1, aid);
+            ResultSet rows = ps.executeQuery();
+            if (!rows.next()) {
+                returnData.put("status", StatusCode.API_ERROR.code());
+                returnData.put("Error", "Auction not found");
+                return returnData;
+            }
+
+            int sellerId = rows.getInt("seller_person_id");
+            Date endDate = rows.getDate("end_date");
+
+            ps = conn.prepareStatement("SELECT id from Person where username = ?");
+            ps.setString(1, username);
+            rows = ps.executeQuery();
+            if (!rows.next()) {
+                returnData.put("status", StatusCode.API_ERROR.code());
+                returnData.put("Error", "User not found");
+                return returnData;
+            }
+
+            int userId = rows.getInt("id");
+
+            if (sellerId != userId) {
+                returnData.put("status", StatusCode.API_ERROR.code());
+                returnData.put("Error:", "Only the seller of the auction can cancel this auction");
+                return returnData;
+            }
+
+            // Update isCancelled to true for the auction
+            ps = conn.prepareStatement("UPDATE auction SET isCancelled = TRUE WHERE aid = ?");
+            ps.setInt(1, aid);
+            ps.executeUpdate();
+
+            returnData.put("status", StatusCode.SUCCESS.code());
+            returnData.put("Message", "Auction canceled successfully");
+        
         } catch (SQLException ex) {
             logger.error("Error in DB", ex);
             returnData.put("status", StatusCode.INTERNAL_ERROR.code());
