@@ -623,7 +623,7 @@ public class DemoProj {
                 return returnData;
             }
             //Checks if auction isCancelled.
-            conn.prepareStatement("select is_cancelled from auction where aid = ?");
+            ps = conn.prepareStatement("select is_cancelled from auction where aid = ?");
             ps.setInt(1, aid);
             rows = ps.executeQuery();
             rows.next();
