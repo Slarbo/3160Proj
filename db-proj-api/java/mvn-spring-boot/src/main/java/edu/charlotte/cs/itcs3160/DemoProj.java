@@ -622,7 +622,7 @@ public class DemoProj {
                 returnData.put("Error:", "Your bid is less than the current bid");
                 return returnData;
             }
-
+            //Checks if auction isCancelled.
             conn.prepareStatement("SELECT isCancelled from AUCTION where aid = ?");
             ps.setInt(1, aid);
             rows = ps.executeQuery();
