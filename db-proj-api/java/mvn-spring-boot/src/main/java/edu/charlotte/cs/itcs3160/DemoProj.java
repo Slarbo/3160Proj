@@ -626,15 +626,7 @@ public class DemoProj {
             conn.prepareStatement("SELECT isCancelled from AUCTION where aid = ?");
             ps.setInt(1, aid);
             rows = ps.executeQuery();
-            rows.next();
-            String stringCancel = rows.getString("isCancelled");
-            boolean isCancelled = false;
-
-            if (stringCancel.equalsIgnoreCase("f")) {
-                isCancelled = false;
-            } else if (stringCancel.equalsIgnoreCase("t")) {
-                isCancelled = true;
-            }
+            boolean isCancelled = rows.getBoolean("isCancelled");
             
             if(!(isCancelled)) {
                 returnData.put("status", StatusCode.API_ERROR.code());
