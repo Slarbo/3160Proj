@@ -919,12 +919,14 @@ public class DemoProj {
                 ps = conn.prepareStatement("UPDATE buyer SET items_won = items_won + 1 WHERE person_id = ?");
                 ps.setInt(1, buyerId);
                 ps.executeUpdate();
+                conn.commit();
             
                 // Close the auction
                 ps = conn.prepareStatement("UPDATE auction SET current_bid = ? WHERE aid = ?");
                 ps.setFloat(1, highestBid);
                 ps.setInt(2, aid);
                 ps.executeUpdate();
+                conn.commit();
 
                 ps = conn.prepareStatement("DELETE FROM auction WHERE aid = ?");
                 ps.setInt(1, aid);
@@ -1006,6 +1008,7 @@ public class DemoProj {
             ps = conn.prepareStatement("UPDATE auction SET isCancelled = TRUE WHERE aid = ?");
             ps.setInt(1, aid);
             ps.executeUpdate();
+            conn.commit();
 
             returnData.put("status", StatusCode.SUCCESS.code());
             returnData.put("Message", "Auction canceled successfully");
