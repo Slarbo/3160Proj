@@ -404,7 +404,7 @@ public class DemoProj {
                 content.put("description", rows.getString("description"));
                 content.put("item_isbn", rows.getString("item_isbn"));
                 content.put("seller_person_id", rows.getString("seller_person_id"));
-                content.put("isCancelled", rows.getString("isCancelled"));
+                content.put("is_cancelled", rows.getString("is_cancelled"));
                 results.add(content);
             }
 
@@ -560,7 +560,7 @@ public class DemoProj {
                 content.put("description", rows.getString("description"));
                 content.put("item_isbn", rows.getString("item_isbn"));
                 content.put("seller_person_id", rows.getString("seller_person_id"));
-                content.put("isCancelled", rows.getString("isCancelled"));
+                content.put("is_cancelled", rows.getString("is_cancelled"));
                 results.add(content);
             }
 
