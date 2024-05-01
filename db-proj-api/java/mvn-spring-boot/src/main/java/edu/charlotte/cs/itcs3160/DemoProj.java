@@ -610,7 +610,7 @@ public class DemoProj {
         try {
             Statement stmt = conn.createStatement();
             //gets auction_isbn, current_bid
-            PreparedStatement ps = conn.prepareStatement("SELECT isbn, current_bid from AUCTION where aid = ?");
+            PreparedStatement ps = conn.prepareStatement("select isbn, current_bid from auction where aid = ?");
             ps.setInt(1, aid);
             ResultSet rows = ps.executeQuery();
             rows.next();
@@ -623,7 +623,7 @@ public class DemoProj {
                 return returnData;
             }
             //Checks if auction isCancelled.
-            conn.prepareStatement("SELECT isCancelled from AUCTION where aid = ?");
+            conn.prepareStatement("select isCancelled from auction where aid = ?");
             ps.setInt(1, aid);
             rows = ps.executeQuery();
             rows.next();
