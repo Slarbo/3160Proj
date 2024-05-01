@@ -1007,7 +1007,7 @@ public class DemoProj {
             }
 
             // Update isCancelled to true for the auction
-            ps = conn.prepareStatement("UPDATE auction SET isCancelled = TRUE WHERE aid = ?");
+            ps = conn.prepareStatement("UPDATE auction SET isCancelled = true WHERE aid = ?");
             ps.setInt(1, aid);
             ps.executeUpdate();
             conn.commit();
