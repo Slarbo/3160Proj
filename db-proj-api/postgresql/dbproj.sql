@@ -26,15 +26,9 @@ CREATE TABLE bid (
 	PRIMARY KEY(bid_id)
 );
 
-CREATE TABLE category (
-	category_id SERIAL,
-	PRIMARY KEY(category_id)
-);
-
 CREATE TABLE item (
 	isbn		 INTEGER,
 	title		 VARCHAR(30) NOT NULL,
-	category_category_id INTEGER NOT NULL,
 	PRIMARY KEY(isbn)
 );
 
@@ -61,7 +55,6 @@ CREATE TABLE buyer (
 ALTER TABLE seller ADD CONSTRAINT seller_fk1 FOREIGN KEY (person_id) REFERENCES person(id);
 ALTER TABLE bid ADD CONSTRAINT bid_fk1 FOREIGN KEY (auction_aid, auction_isbn) REFERENCES auction(aid, isbn);
 ALTER TABLE bid ADD CONSTRAINT bid_fk2 FOREIGN KEY (buyer_person_id) REFERENCES buyer(person_id);
-ALTER TABLE item ADD CONSTRAINT item_fk1 FOREIGN KEY (category_category_id) REFERENCES category(category_id);
 ALTER TABLE auction ADD CONSTRAINT auction_fk1 FOREIGN KEY (item_isbn) REFERENCES item(isbn);
 ALTER TABLE auction ADD CONSTRAINT auction_fk2 FOREIGN KEY (seller_person_id) REFERENCES seller(person_id);
 ALTER TABLE buyer ADD CONSTRAINT buyer_fk1 FOREIGN KEY (person_id) REFERENCES person(id);
