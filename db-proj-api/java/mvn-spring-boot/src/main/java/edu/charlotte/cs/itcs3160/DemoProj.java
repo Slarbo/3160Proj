@@ -545,7 +545,7 @@ public class DemoProj {
 
         try {
             Statement stmt = conn.createStatement();
-            PreparedStatement ps = conn.prepareStatement("SELECT aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id, isCancelled FROM auction WHERE aid = ?");
+            PreparedStatement ps = conn.prepareStatement("SELECT aid, isbn, start_date, end_date, current_bid, description, item_isbn, seller_person_id, is_cancelled FROM auction WHERE aid = ?");
             ps.setInt(1, aid);
             ResultSet rows = ps.executeQuery();
             logger.debug("---- auction  ----");
